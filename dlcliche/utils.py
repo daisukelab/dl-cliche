@@ -14,8 +14,9 @@ from itertools import chain
 def flatten_list(lists):
     return list(chain.from_iterable(lists))
 
+# Thanks to https://stackoverflow.com/questions/3844801/check-if-all-elements-in-a-list-are-identical
 def all_elements_are_identical(iterator):
-    # https://stackoverflow.com/questions/3844801/check-if-all-elements-in-a-list-are-identical
+    """Check all elements in iterable like list are identical."""
     iterator = iter(iterator)
     try:
         first = next(iterator)
@@ -23,8 +24,27 @@ def all_elements_are_identical(iterator):
         return True
     return all(first == rest for rest in iterator)
 
-def get_top_k(top_k, predictions):
-    return np.argsort(-predictions, axis=1)[:, :top_k]
+# Thanks to https://github.com/dsindex/blog/wiki/%5Bpython%5D-difflib,-show-differences-between-two-strings
+import difflib
+def show_text_diff(text, n_text):
+    """
+    http://stackoverflow.com/a/788780
+    Unify operations between two compared strings seqm is a difflib.
+    SequenceMatcher instance whose a & b are strings
+    """
+    seqm = difflib.SequenceMatcher(None, text, n_text)
+    output= []
+    for opcode, a0, a1, b0, b1 in seqm.get_opcodes():
+        if opcode == 'equal':
+            pass # output.append(seqm.a[a0:a1])
+        elif opcode == 'insert':
+            output.append("<INS>^" + seqm.b[b0:b1] + "</INS>")
+        elif opcode == 'delete':
+            output.append("<DEL>^" + seqm.a[a0:a1] + "</DEL>")
+        elif opcode == 'replace':
+            # seqm.a[a0:a1] -> seqm.b[b0:b1]
+            output.append("<REPL>^" + seqm.b[b0:b1] + "</REPL>")
+        else:
+            raise RuntimeError
+    return ''.join(output)
 
-def get_top_k_labels(labels, top_k, predictions):
-    return np.array(labels)[np.argsort(-predictions, axis=1)[:, :top_k]]
