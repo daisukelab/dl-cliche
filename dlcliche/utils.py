@@ -1,9 +1,22 @@
 from .general import *
 from .ignore_warnings import *
 
+import IPython
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+from easydict import EasyDict
+from tqdm import tqdm_notebook
+
 def ensure_folder(folder):
     """Make sure a folder exists."""
     Path(folder).mkdir(exist_ok=True, parent=True)
+
+import shutil
+def copy_file(src, target):
+    """Copy source file to target file."""
+    assert Path(src).is_file()
+    shutil.copy(str(src), str(target))
 
 def write_text_list(textfile, a_list):
     """Write list of str to a file with new lines."""
@@ -38,13 +51,19 @@ def show_text_diff(text, n_text):
         if opcode == 'equal':
             pass # output.append(seqm.a[a0:a1])
         elif opcode == 'insert':
-            output.append("<INS>^" + seqm.b[b0:b1] + "</INS>")
+            output.append("<INS>" + seqm.b[b0:b1] + "</INS>")
         elif opcode == 'delete':
-            output.append("<DEL>^" + seqm.a[a0:a1] + "</DEL>")
+            output.append("<DEL>" + seqm.a[a0:a1] + "</DEL>")
         elif opcode == 'replace':
             # seqm.a[a0:a1] -> seqm.b[b0:b1]
-            output.append("<REPL>^" + seqm.b[b0:b1] + "</REPL>")
+            output.append("<REPL>" + seqm.b[b0:b1] + "</REPL>")
         else:
             raise RuntimeError
     return ''.join(output)
+
+## Pandas utilities
+
+def df_to_csv_excel_friendly(df, filename):
+    """df.to_csv() to be excel friendly UTF-8 handling."""
+    df.to_csv(filename, encoding='utf_8_sig')
 
