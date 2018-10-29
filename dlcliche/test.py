@@ -8,7 +8,7 @@ def recursive_test_array(cls, a, b, msg=None, fn=None):
         Testing list with real numbers which could have very little change caused by arithmetical operation.
         ```python
         def test_arrays_example(self):
-            recursive_test_array(self, array1, array2, assertAlmostEqual)
+            recursive_test_array(self, array1, array2, fn=assertAlmostEqual)
         ```
     """
     if msg is None: msg = ''
