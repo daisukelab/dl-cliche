@@ -132,3 +132,118 @@ def df_to_csv_excel_friendly(df, filename):
     """df.to_csv() to be excel friendly UTF-8 handling."""
     df.to_csv(filename, encoding='utf_8_sig')
 
+## Dataset utilities
+
+from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
+
+def flatten_y_if_onehot(y):
+    """De-one-hot y, i.e. [0,1,0,0,...] to 1 for all y."""
+    return y if len(np.array(y).shape) == 1 else np.argmax(y, axis = -1)
+
+def get_class_distribution(y):
+    """Calculate number of samples per class."""
+    # y_cls can be one of [OH label, index of class, class label name string]
+    # convert OH to index of class
+    y_cls = flatten_y_if_onehot(y)
+    # y_cls can be one of [index of class, class label name]
+    classset = sorted(list(set(y_cls)))
+    sample_distribution = {cur_cls:len([one for one in y_cls if one == cur_cls]) for cur_cls in classset}
+    return sample_distribution
+
+def get_class_distribution_list(y, num_classes):
+    """Calculate number of samples per class as list"""
+    dist = get_class_distribution(y)
+    assert(y[0].__class__ != str) # class index or class OH label only
+    list_dist = np.zeros((num_classes))
+    for i in range(num_classes):
+        if i in dist:
+            list_dist[i] = dist[i]
+    return list_dist
+
+def _balance_class(X, y, min_or_max, sampler_class, random_state):
+    """Balance class distribution with sampler_class."""
+    y_cls = flatten_y_if_onehot(y)
+    distribution = get_class_distribution(y_cls)
+    classes = list(distribution.keys())
+    counts  = list(distribution.values())
+    nsamples = np.max(counts) if min_or_max == 'max' \
+          else np.min(counts)
+    flat_ratio = {cls:nsamples for cls in classes}
+    Xidx = [[xidx] for xidx in range(len(X))]
+    sampler_instance = sampler_class(ratio=flat_ratio, random_state=random_state)
+    Xidx_resampled, y_cls_resampled = sampler_instance.fit_sample(Xidx, y_cls)
+    sampled_index = [idx[0] for idx in Xidx_resampled]
+    return np.array([X[idx] for idx in sampled_index]), np.array([y[idx] for idx in sampled_index])
+
+def balance_class_by_over_sampling(X, y, random_state=42):
+    """Balance class distribution with imbalanced-learn RandomOverSampler."""
+    return  _balance_class(X, y, 'max', RandomOverSampler, random_state)
+
+def balance_class_by_under_sampling(X, y, random_state=42):
+    """Balance class distribution with imbalanced-learn RandomUnderSampler."""
+    return  _balance_class(X, y, 'min', RandomUnderSampler, random_state)
+
+def visualize_class_balance(title, y, labels):
+    sample_dist_list = get_class_distribution_list(y, len(labels))
+    index = range(len(labels))
+    fig, ax = plt.subplots(1, 1, figsize = (16, 5))
+    ax.bar(index, sample_dist_list)
+    ax.set_xlabel('Label')
+    ax.set_xticks(index)
+    ax.set_xticklabels(labels, rotation='vertical')
+    ax.set_ylabel('Number of Samples')
+    ax.set_title(title)
+    fig.show()
+
+def print_class_balance(title, y, labels):
+    distributions = get_class_distribution(y)
+    dist_dic = {labels[cls]:distributions[cls] for cls in distributions}
+    print(title, '=', dist_dic)
+    zeroclasses = [label for i, label in enumerate(labels) if i not in distributions.keys()]
+    if 0 < len(zeroclasses):
+        print(' 0 sample classes:', zeroclasses)
+
+## Visualization utilities
+
+# Thanks to http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
+import itertools
+from sklearn.metrics import confusion_matrix
+
+def plot_confusion_matrix(y_test, y_pred, classes,
+                          normalize=True,
+                          title=None,
+                          cmap=plt.cm.Blues):
+    """Plot confusion matrix.
+    """
+    po = np.get_printoptions()
+    np.set_printoptions(precision=2)
+
+    y_test = flatten_y_if_onehot(y_test)
+    y_pred = flatten_y_if_onehot(y_pred)
+    cm = confusion_matrix(y_test, y_pred)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        if title is None: title = 'Normalized confusion matrix'
+    else:
+        if title is None: title = 'Confusion matrix (not normalized)'
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+    np.set_printoptions(**po)
