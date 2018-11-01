@@ -9,6 +9,8 @@ from easydict import EasyDict
 from tqdm import tqdm_notebook
 import shutil
 
+## File utilities
+
 def ensure_folder(folder):
     """Make sure a folder exists."""
     Path(folder).mkdir(exist_ok=True, parents=True)
@@ -78,6 +80,18 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
             if _done: break
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
+
+## Log utilities
+
+def get_logger():
+    from logging import getLogger, StreamHandler, DEBUG
+    log = getLogger(__name__)
+    handler = StreamHandler()
+    handler.setLevel(DEBUG)
+    log.setLevel(DEBUG)
+    log.addHandler(handler)
+    log.propagate = False
+    return log
 
 ## List utilities
 
