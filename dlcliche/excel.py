@@ -55,7 +55,7 @@ def opx_duplicate_style(sh, row_src, row_dest, n_row=None, debug=False):
     if n_row is None:
         n_row = sh.max_row - row_dest
     if debug:
-        print('duplicate', row_src, 'style to ', row_dest, '-', row_dest+n_row - 1)
+        print('duplicate', row_src, 'style to', row_dest, '-', row_dest+n_row - 1)
     for r in range(row_dest, row_dest+n_row):
         for c in range(n_col):
             opx_copy_cell_style(sh.cell(column=c+1, row=row_src+1), sh.cell(column=c+1, row=r+1))

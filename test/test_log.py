@@ -47,13 +47,21 @@ class TesLog(unittest.TestCase):
             '0000-00-00 00:00:00,000 logtest test_0_file_log [ERROR]: logging error\n')
 
     def test_4_file_log(self):
-        log = get_logger('logtest', level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s',
+        log = get_logger('logtest2', level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s',
                          print=False, output_file='logtest/foo/bar/test2.txt')
         log.info('logging info')
         with open('logtest/foo/bar/test2.txt') as f:
             contents = f.read()
         self.assertEqual(re.sub('[0-9]', '0', contents),
             '0000-00-00 00:00:00,000: INFO: logging info\n')
+    
+    def test_5_log_from_everywhere(self):
+        log = get_logger('everywhere')
+        log.info('logging info')
+        log.debug('logging debug')
+        log.error('logging error')
+        from . import logtest_sub
+        logtest_sub.logtest_sub(self, 'everywhere')
 
 if __name__ == '__main__':
     unittest.main()

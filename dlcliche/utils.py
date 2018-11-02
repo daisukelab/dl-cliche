@@ -84,11 +84,16 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
 ## Log utilities
 
 import logging
+_loggers = {}
 def get_logger(name=None, level=logging.DEBUG, format=None, print=True, output_file=None):
     """One liner to get logger.
     See test_log.py for example.
     """
-    log = logging.getLogger(name or __name__)
+    name = name or __name__
+    if _loggers.get(name):
+        return _loggers.get(name)
+    else:
+        log = logging.getLogger(name)
     formatter = logging.Formatter(format or '%(asctime)s %(name)s %(funcName)s [%(levelname)s]: %(message)s')
     def add_handler(handler):
         handler.setFormatter(formatter)
@@ -101,6 +106,7 @@ def get_logger(name=None, level=logging.DEBUG, format=None, print=True, output_f
         add_handler(logging.FileHandler(output_file))
     log.setLevel(level)
     log.propagate = False
+    _loggers[name] = log
     return log
 
 ## List utilities
