@@ -1,5 +1,16 @@
+from dlcliche.utils import *
 import openpyxl as opx
 from copy import copy
+
+def pd_read_excel_keep_dtype(io, **args):
+    """pd.read_excel() wrapper to do as described in pandas document:
+    '... preserve data as stored in Excel and not interpret dtype'
+
+    Details:
+        - String '1' might be loaded as int 1 by pd.read_excel(file).
+        - By setting `dtype=object` it will preserve it as string '1'.
+    """
+    return pd.read_excel(io, dtype=object, **args)
 
 def opx_copy_cell(source_cell, target_cell, style_copy=False):
     """openpyxl helper: Copy cell from source to target.
