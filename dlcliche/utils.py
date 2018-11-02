@@ -83,13 +83,20 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
 
 ## Log utilities
 
-def get_logger():
-    from logging import getLogger, StreamHandler, DEBUG
-    log = getLogger(__name__)
-    handler = StreamHandler()
-    handler.setLevel(DEBUG)
-    log.setLevel(DEBUG)
-    log.addHandler(handler)
+import logging
+def get_logger(name=None, level=logging.DEBUG, format=None, print=True, output_file=None):
+    log = logging.getLogger(name or __name__)
+    formatter = logging.Formatter(format or '%(asctime)s %(name)s %(funcName)s [%(levelname)s]: %(message)s')
+    def add_handler(handler):
+        handler.setFormatter(formatter)
+        handler.setLevel(level)
+        log.addHandler(handler)
+    if print:
+        add_handler(logging.StreamHandler())
+    if output_file:
+        ensure_folder(Path(output_file).parent)
+        add_handler(logging.FileHandler(output_file))
+    log.setLevel(level)
     log.propagate = False
     return log
 
