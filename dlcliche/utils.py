@@ -27,8 +27,7 @@ def copy_file(src, dst):
     assert Path(src).is_file()
     shutil.copy(str(src), str(dst))
 
-def copy_any(src, dst, symlinks=True):
-    """Copy any file or folder recursively."""
+def _copy_any(src, dst, symlinks):
     if Path(src).is_dir():
         if Path(dst).is_dir():
             dst = Path(dst)/Path(src).name
@@ -37,10 +36,18 @@ def copy_any(src, dst, symlinks=True):
     else:
         copy_file(src, dst)
 
+def copy_any(src, dst, symlinks=True):
+    """Copy any file or folder recursively.
+    Source file can be list/array of files.
+    """
+    do_list_item(_copy_any, src, dst, symlinks)
+
 def do_list_item(func, src, *prms):
     if isinstance(src, (list, tuple, np.ndarray)):
+        result = True
         for element in src:
-            return do_list_item(func, element, *prms)
+            result = do_list_item(func, element, *prms) and result
+        return result
     else:
         return func(src, *prms)
 

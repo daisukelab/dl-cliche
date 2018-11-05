@@ -38,6 +38,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(y1, flatten_list(X))
 
     def make_folder_for_sure(self, folder):
+        ensure_delete(folder)
         ensure_folder(folder)
         self.assertTrue(folder.is_dir())
 
@@ -57,11 +58,9 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(self.tmp_folder.is_dir())
         copy_src = self.tmp_folder/'src'
         dst = self.tmp_folder/'dst'
-        ensure_delete(copy_src)
-        ensure_delete(dst)
-
         src_all = self.make_src_files_for_copy_tests(copy_src)
 
+        self.make_folder_for_sure(dst)
         make_copy_to(dst, src_all, operation=symlink_file)
         for i in range(5):
             sub_folder = dst/('sub%d' % i)
@@ -69,8 +68,8 @@ class TestUtils(unittest.TestCase):
         for i in range(5):
             sub_file = dst/('file%d.txt' % i)
             self.assertTrue(sub_file.is_symlink())
-        ensure_delete(dst)
 
+        self.make_folder_for_sure(dst)
         make_copy_to(dst, src_all, operation=copy_any)
         for i in range(5):
             sub_folder = dst/('sub%d' % i)
@@ -81,21 +80,16 @@ class TestUtils(unittest.TestCase):
             f.close()
             self.assertEqual('abcde%d' % i, text)
 
-    def test_2_copy_move(self):
+    def test_2_copy_move_single(self):
         self.assertTrue(self.tmp_folder.is_dir())
         copy_src = self.tmp_folder/'src'
         dst = self.tmp_folder/'dst'
-        ensure_delete(copy_src)
         src_all = self.make_src_files_for_copy_tests(copy_src)
 
-        self.assertTrue(dst.is_dir())
-
-        # move/copy single file
         for shift, fn in zip([0, 1], [copy_any, move_file]):
             # clean up
-            ensure_delete(dst)
-            ensure_folder(dst)
-            # test
+            self.make_folder_for_sure(dst)
+            # test single source file
             fn(src_all[5+shift], str(dst))
             self.assertTrue((dst/src_all[5+shift].name).is_dir())
             fn(src_all[shift], str(dst))
@@ -103,6 +97,31 @@ class TestUtils(unittest.TestCase):
             text = f.read()
             f.close()
             self.assertEqual('abcde%d'%shift, text)
+
+    def test_3_copy_move_multi(self):
+        self.assertTrue(self.tmp_folder.is_dir())
+        copy_src = self.tmp_folder/'src'
+        dst = self.tmp_folder/'dst'
+        src_all = self.make_src_files_for_copy_tests(copy_src)
+
+        for shift, fn in zip([0, 2], [copy_any, move_file]):
+            # clean up
+            self.make_folder_for_sure(dst)
+            # test single source file
+            fn(src_all[5+shift:7+shift], str(dst))
+            self.assertTrue((dst/src_all[5+shift].name).is_dir())
+            self.assertTrue((dst/src_all[6+shift].name).is_dir())
+            fn(src_all[shift:2+shift], str(dst))
+            for k in range(2):
+                cur = k + shift
+                fname = dst/('file%d.txt'%cur)
+                f = fname.open()
+                text = f.read()
+                f.close()
+                self.assertEqual('abcde%d'%cur, text)
+            if move_file == fn:
+                for k in [7,8,2,3]:
+                    self.assertFalse(src_all[k].exists())
 
 if __name__ == '__main__':
     unittest.main()
