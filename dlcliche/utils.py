@@ -19,7 +19,7 @@ def ensure_delete(folder_or_file):
     anything = Path(folder_or_file)
     if anything.is_dir():
         shutil.rmtree(str(folder_or_file))
-    else:
+    elif anything.exists():
         anything.unlink()
 
 def copy_file(src, dst):
@@ -30,9 +30,28 @@ def copy_file(src, dst):
 def copy_any(src, dst, symlinks=True):
     """Copy any file or folder recursively."""
     if Path(src).is_dir():
+        if Path(dst).is_dir():
+            dst = Path(dst)/Path(src).name
+        assert not Path(dst).exists()
         shutil.copytree(src, dst, symlinks=symlinks)
     else:
         copy_file(src, dst)
+
+def do_list_item(func, src, *prms):
+    if isinstance(src, (list, tuple, np.ndarray)):
+        for element in src:
+            return do_list_item(func, element, *prms)
+    else:
+        return func(src, *prms)
+
+def _move_file(src, dst):
+    shutil.move(str(src), str(dst))
+
+def move_file(src, dst):
+    """Move source file to destination file/folder.
+    Source file can be list/array of files.
+    """
+    do_list_item(_move_file, src, dst)
 
 def symlink_file(fromfile, tofile):
     """Make fromfile's symlink as tofile."""
