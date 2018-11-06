@@ -107,7 +107,7 @@ class TestUtils(unittest.TestCase):
         for shift, fn in zip([0, 2], [copy_any, move_file]):
             # clean up
             self.make_folder_for_sure(dst)
-            # test single source file
+            # test multiple source files
             fn(src_all[5+shift:7+shift], str(dst))
             self.assertTrue((dst/src_all[5+shift].name).is_dir())
             self.assertTrue((dst/src_all[6+shift].name).is_dir())
