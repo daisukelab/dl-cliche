@@ -123,5 +123,27 @@ class TestUtils(unittest.TestCase):
                 for k in [7,8,2,3]:
                     self.assertFalse(src_all[k].exists())
 
+    def test_pandas_utility(self):
+        # df_merge_update
+        agg_df = pd.DataFrame({'idx': [1, 2, 3, 4, 5], 'data': [100, 101, 102, 103, 104]})
+        agg_df = agg_df.set_index('idx')
+        df = pd.DataFrame({'idx': [3, 4, 6, 7], 'data': [110, 111, 112, 113]})
+        df = df.set_index('idx')
+
+        agg_df = df_merge_update(agg_df, df)
+        reference_df = pd.DataFrame({'data': [100, 101, 110, 111, 104, 112, 113], 'idx': [1, 2, 3, 4, 5, 6, 7]})
+        reference_df = reference_df.set_index('idx')
+        self.assertTrue(agg_df.equals(reference_df))
+
+        # df_select_by_keyword
+        test_df = pd.DataFrame({'one': ['The quick brown fox jumps over the lazy dog', 'Tiny dog'],
+                                'two': ['Little bird', 'Sniffing skunk']})
+        df = df_select_by_keyword(test_df, 'lazy')
+        self.assertTrue(df.equals(df[:1]))
+        df = df_select_by_keyword(test_df, 'Little')
+        self.assertTrue(df.equals(df[0:]))
+        df = df_select_by_keyword(test_df, 'Little', search_columns=['one'])
+        self.assertTrue(len(df) == 0)
+
 if __name__ == '__main__':
     unittest.main()

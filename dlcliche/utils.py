@@ -188,6 +188,32 @@ def df_to_csv_excel_friendly(df, filename):
     """df.to_csv() to be excel friendly UTF-8 handling."""
     df.to_csv(filename, encoding='utf_8_sig')
 
+def df_merge_update(to_df, joining_from_df):
+    """Merge data frames while update duplicated index with joining row."""
+    tmp_df = pd.concat([to_df, joining_from_df])
+    to_df = tmp_df[~tmp_df.index.duplicated(keep='last')].sort_index()
+    return to_df
+
+def df_select_by_keyword(source_df, keyword, search_columns=None):
+    """Select data frame rows by a search keyword.
+    
+    Returns:
+        New data frame where rows have the keyword.
+    """
+    search_columns = search_columns or source_df.columns
+    mask = np.column_stack([source_df[col].str.contains(keyword, na=False) for col in search_columns])
+    return source_df.loc[mask.any(axis=1)]
+
+def pd_read_excel_keep_dtype(io, **args):
+    """pd.read_excel() wrapper to do as described in pandas document:
+    '... preserve data as stored in Excel and not interpret dtype'
+
+    Details:
+        - String '1' might be loaded as int 1 by pd.read_excel(file).
+        - By setting `dtype=object` it will preserve it as string '1'.
+    """
+    return pd.read_excel(io, dtype=object, **args)
+
 ## Dataset utilities
 
 from imblearn.over_sampling import RandomOverSampler
