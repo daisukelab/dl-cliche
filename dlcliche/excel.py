@@ -2,6 +2,17 @@ from dlcliche.utils import *
 import openpyxl as opx
 from copy import copy
 
+_EXCEL_LIKE = ['.csv', '.xls', '.xlsx', '.xlsm']
+
+def is_csv_file(filename):
+    suffix = Path(filename).suffix.lower()
+    return suffix == '.csv'
+
+def is_excel_file(filename):
+    suffix = Path(filename).suffix.lower()
+    # not accepted if suffix == '.csv': return True
+    return suffix in _EXCEL_LIKE
+
 def opx_copy_cell(source_cell, target_cell, style_copy=False):
     """openpyxl helper: Copy cell from source to target.
     Cells can be on different sheets.
