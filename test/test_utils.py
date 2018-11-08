@@ -145,5 +145,11 @@ class TestUtils(unittest.TestCase):
         df = df_select_by_keyword(test_df, 'Little', search_columns=['one'])
         self.assertTrue(len(df) == 0)
 
+    def test_file_lock(self):
+        lock_file_mutex()
+        self.assertTrue(is_file_mutex_locked())
+        release_file_mutex()
+        self.assertFalse(is_file_mutex_locked())
+
 if __name__ == '__main__':
     unittest.main()

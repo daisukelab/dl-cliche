@@ -135,6 +135,33 @@ def get_logger(name=None, level=logging.DEBUG, format=None, print=True, output_f
     _loggers[name] = log
     return log
 
+## Multi process utilities
+
+import datetime
+def caller_func_name(level=2):
+    """Return caller function name."""
+    return sys._getframe(level).f_code.co_name
+
+def _file_mutex_filename(filename):
+    return filename or '/tmp/'+Path(caller_func_name(level=3)).stem+'.lock'
+
+def lock_file_mutex(filename=None):
+    """Lock file mutex (usually placed under /tmp).
+    Note that filename will be created based on caller function name.
+    """
+    filename = _file_mutex_filename(filename)
+    with open(filename, 'w') as f:
+        f.write('locked at {}'.format(datetime.datetime.now()))
+def release_file_mutex(filename=None):
+    """Release file mutex."""
+    filename = _file_mutex_filename(filename)
+    ensure_delete(filename)
+
+def is_file_mutex_locked(filename=None):
+    """Check if file mutex is locked or not."""
+    filename = _file_mutex_filename(filename)
+    return Path(filename).exists()
+
 ## List utilities
 
 def write_text_list(textfile, a_list):
