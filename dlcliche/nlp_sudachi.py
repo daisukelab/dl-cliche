@@ -1,25 +1,16 @@
-
-
+from .nlp_base import TokenizerBase
 import json
 from sudachipy import tokenizer
 from sudachipy import dictionary
 from sudachipy import config
 
-class TokenizeBySudachi:
+class TokenizeBySudachi(TokenizerBase):
     def __init__(self, stop_words, normalize=True, mode=tokenizer.Tokenizer.SplitMode.B):
+        super().__init__(stop_words, normalize)
         with open(config.SETTINGFILE, "r", encoding="utf-8") as f:
             settings = json.load(f)
         self.tokenizer = dictionary.Dictionary(settings).create()
-        self.stop_words = stop_words
-        self.normalize = normalize
         self.mode = mode
-    def _format(self, word):
-        if word.isdigit():
-            return '0'
-        elif word in self.stop_words:
-            return ''
-        else:
-            return word
     def tokenize(self, text):
         self.raw_tokens = self.tokenizer.tokenize(self.mode, text.strip())
         _tokens = [self._format(w.normalized_form() if self.normalize else w.surface())
