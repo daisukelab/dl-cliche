@@ -295,6 +295,11 @@ def balance_class_by_under_sampling(X, y, random_state=42):
 
 def visualize_class_balance(title, y, labels):
     sample_dist_list = get_class_distribution_list(y, len(labels))
+    if sorted:
+        items = list(zip(labels, sample_dist_list))
+        items.sort(key=lambda x:x[1], reverse=True)
+        sample_dist_list = [x[1] for x in items]
+        labels = [x[0] for x in items]
     index = range(len(labels))
     fig, ax = plt.subplots(1, 1, figsize = (16, 5))
     ax.bar(index, sample_dist_list)
@@ -305,15 +310,39 @@ def visualize_class_balance(title, y, labels):
     ax.set_title(title)
     fig.show()
 
-def print_class_balance(title, y, labels):
+from collections import OrderedDict
+def print_class_balance(title, y, labels, sorted=False):
     distributions = get_class_distribution(y)
     dist_dic = {labels[cls]:distributions[cls] for cls in distributions}
+    if sorted:
+        items = list(dist_dic.items())
+        items.sort(key=lambda x:x[1], reverse=True)
+        dist_dic = OrderedDict(items) # sorted(dist_dic.items(), key=...) didn't work for some reason...
     print(title, '=', dist_dic)
     zeroclasses = [label for i, label in enumerate(labels) if i not in distributions.keys()]
     if 0 < len(zeroclasses):
         print(' 0 sample classes:', zeroclasses)
 
 ## Visualization utilities
+
+# Thanks to https://qiita.com/knknkn1162/items/be87cba14e38e2c0f656
+def plt_japanese_font_ready():
+    """Set font family with Japanese fonts.
+    
+    # How to install fonts:
+        wget https://ipafont.ipa.go.jp/old/ipafont/IPAfont00303.php
+        mv IPAfont00303.php IPAfont00303.zip
+        unzip -q IPAfont00303.zip
+        sudo cp IPAfont00303/*.ttf /usr/share/fonts/truetype/
+    """
+    plt.rcParams['font.family'] = 'IPAPGothic'
+
+def plt_looks_good():
+    """Plots will be looks good (at least to me)."""
+    plt.rcParams["figure.figsize"] = [16, 10]
+    plt.rcParams['font.size'] = 14
+    plt.rcParams['xtick.labelsize'] = 10
+    plt.rcParams['ytick.labelsize'] = 10
 
 # Thanks to http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
 import itertools
@@ -323,8 +352,7 @@ def plot_confusion_matrix(y_test, y_pred, classes,
                           normalize=True,
                           title=None,
                           cmap=plt.cm.Blues):
-    """Plot confusion matrix.
-    """
+    """Plot confusion matrix."""
     po = np.get_printoptions()
     np.set_printoptions(precision=2)
 

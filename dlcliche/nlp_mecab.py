@@ -5,14 +5,11 @@ Thanks to https://qiita.com/ekzemplaro/items/c98c7f6698f130b55d53
 
 ```sh
 $ sudo apt install mecab libmecab-dev mecab-ipadic-utf8
-$ sudo apt install libmecab-dev
-$ sudo apt install mecab-ipadic-utf8
 
 $ git clone https://github.com/neologd/mecab-ipadic-neologd.git
 $ cd mecab-ipadic-neologd && sudo bin/install-mecab-ipadic-neologd
 
-$ pip install mecab-python3
-($ pip install neologdn)
+$ pip install mecab-python3 neologdn
 ```
 """
 

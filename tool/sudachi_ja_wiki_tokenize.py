@@ -1,4 +1,6 @@
-"""Convert wikiextractor preprocessed to text8.
+"""Convert wikiextractor preprocessed text to tokenized text.
+
+This uses Sudachi tokenizer.
 
 ## Expected Files Before Processing
 
@@ -14,15 +16,15 @@ If normalized, files will be created under folder 'norm'.
 
 ```sh
 $ ls dataset/nlp/wikipedia/norm
-full_ja_AA.text8  full_ja_AB.text8  full_ja_AC.text8
-full_ja_AD.text8  full_ja_AE.text8  full_ja_AF.text8
+full_ja_AA.wakachi  full_ja_AB.wakachi  full_ja_AC.wakachi
+full_ja_AD.wakachi  full_ja_AE.wakachi  full_ja_AF.wakachi
 ...
 
 If not normalized, files will be stored under folder 'asis'.
 """
 
 from dlcliche.utils import *
-from dlcliche.nlp_ja import *
+from dlcliche.nlp_sudachi import *
 import re
 import argparse
 parser = argparse.ArgumentParser(description='Wikipedia tokenizer')
@@ -52,7 +54,7 @@ print('Output to', output_folder)
 # Process
 for folder_id in sub_folders:
     folder = WIKI_PATH/folder_id
-    with open(f'{output_folder/"full_ja_"}{folder_id}.text8', 'w') as out_f:
+    with open(f'{output_folder/"full_ja_"}{folder_id}.wakachi', 'w') as out_f:
         for file in folder.glob('wiki*'):
             print('Processing', file)
             with file.open() as f:
