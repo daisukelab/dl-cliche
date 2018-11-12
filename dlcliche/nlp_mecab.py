@@ -18,7 +18,7 @@ import MeCab
 import neologdn
 
 class TokenizeByMeCab(TokenizerBase):
-    def __init__(self, stop_words, normalize=True):
+    def __init__(self, stop_words, normalize=False):
         super().__init__(stop_words, normalize)
         self.tagger = MeCab.Tagger("-Owakati")
 
@@ -29,5 +29,5 @@ class TokenizeByMeCab(TokenizerBase):
         self.tokens = [w for w in _tokens if w is not '']
         return self.tokens
     
-def get_mecab_tokenizer(stop_words=['\u3000'], normalize=True):
+def get_mecab_tokenizer(stop_words=['\u3000'], normalize=False):
     return TokenizeByMeCab(stop_words=stop_words, normalize=normalize)

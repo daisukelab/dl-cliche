@@ -169,6 +169,12 @@ def write_text_list(textfile, a_list):
     with open(textfile, 'w') as f:
         f.write('\n'.join(a_list)+'\n')
 
+def read_text_list(filename) -> list:
+    """Read text file splitted as list of texts, stripped."""
+    with open(filename) as f:
+        lines = f.read().splitlines()
+        return [l.strip() for l in lines]
+
 from itertools import chain
 def flatten_list(lists):
     return list(chain.from_iterable(lists))
@@ -215,11 +221,23 @@ def df_to_csv_excel_friendly(df, filename):
     """df.to_csv() to be excel friendly UTF-8 handling."""
     df.to_csv(filename, encoding='utf_8_sig')
 
-def df_merge_update(to_df, joining_from_df):
-    """Merge data frames while update duplicated index with joining row."""
-    tmp_df = pd.concat([to_df, joining_from_df])
-    to_df = tmp_df[~tmp_df.index.duplicated(keep='last')].sort_index()
-    return to_df
+def df_merge_update(df_list_or_org_file, opt_joining_file=None):
+    """Merge data frames while update duplicated index with following (joining) row.
+    
+    Usages:
+        - df_merge_update([df1, df2, ...]) merges dfs in list.
+        - df_merge_update(df1, df2) merges df1 and df2.
+    """
+    if opt_joining_file is not None:
+        df_list = [df_list_or_org_file, opt_joining_file]
+    else:
+        df_list = df_list_or_org_file
+
+    master = df_list[0]
+    for df in df_list[1:]:
+        tmp_df = pd.concat([master, df])
+        master = tmp_df[~tmp_df.index.duplicated(keep='last')].sort_index()
+    return master
 
 def df_select_by_keyword(source_df, keyword, search_columns=None):
     """Select data frame rows by a search keyword.
@@ -231,6 +249,17 @@ def df_select_by_keyword(source_df, keyword, search_columns=None):
     mask = np.column_stack([source_df[col].str.contains(keyword, na=False) for col in search_columns])
     return source_df.loc[mask.any(axis=1)]
 
+def df_str_replace(df, from_strs, to_str):
+    """Apply str.replace to entire DataFrame inplace."""
+    for i, row in df.iterrows():
+        df.ix[i] = df.ix[i].str.replace(from_strs, to_str)
+
+def df_cell_str_replace(df, from_str, to_str):
+    """Replace cell string with new string if entire string matches."""
+    for i, row in df.iterrows():
+        for c in df.columns:
+            df.at[i, c] = to_str if str(df.at[i, c]) == from_str else df.at[i, c]
+
 def pd_read_excel_keep_dtype(io, **args):
     """pd.read_excel() wrapper to do as described in pandas document:
     '... preserve data as stored in Excel and not interpret dtype'
@@ -240,6 +269,28 @@ def pd_read_excel_keep_dtype(io, **args):
         - By setting `dtype=object` it will preserve it as string '1'.
     """
     return pd.read_excel(io, dtype=object, **args)
+
+def pd_read_csv_as_str(filename, **args):
+    """pd.read_csv() wrapper to preserve data type = str"""
+    return pd.read_csv(filename, dtype=object, **args)
+
+def df_load_excel_like(filename, preserve_dtype=True, **args):
+    """Load Excel like files. (csv, xlsx, ...)"""
+    if is_csv_file(filename):
+        if preserve_dtype:
+            return pd_read_csv_as_str(filename, **args)
+        return pd.read_csv(filename, **args)
+    if preserve_dtype:
+        return pd_read_excel_keep_dtype(filename, **args)
+    return pd.read_excel(filename, **args)
+
+import codecs
+def df_read_sjis_csv(filename, **args):
+    """Read shift jis Japanese csv file.
+    Thanks to https://qiita.com/niwaringo/items/d2a30e04e08da8eaa643
+    """
+    with codecs.open(filename, 'r', 'Shift-JIS', 'ignore') as file:
+        return pd.read_table(file, delimiter=',', **args)
 
 ## Dataset utilities
 
