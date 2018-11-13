@@ -260,6 +260,14 @@ def df_cell_str_replace(df, from_str, to_str):
         for c in df.columns:
             df.at[i, c] = to_str if str(df.at[i, c]) == from_str else df.at[i, c]
 
+_EXCEL_LIKE = ['.csv', '.xls', '.xlsx', '.xlsm']
+def is_excel_file(filename):
+    # not accepted if suffix == '.csv': return True
+    return Path(filename).suffix.lower() in _EXCEL_LIKE
+
+def is_csv_file(filename):
+    return Path(filename).suffix.lower() == '.csv'
+
 def pd_read_excel_keep_dtype(io, **args):
     """pd.read_excel() wrapper to do as described in pandas document:
     '... preserve data as stored in Excel and not interpret dtype'
