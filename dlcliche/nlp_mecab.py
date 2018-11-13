@@ -15,7 +15,6 @@ $ pip install mecab-python3 neologdn
 
 from .nlp_base import TokenizerBase
 import MeCab
-import neologdn
 
 class TokenizeByMeCab(TokenizerBase):
     def __init__(self, stop_words, normalize=False):
@@ -24,8 +23,7 @@ class TokenizeByMeCab(TokenizerBase):
 
     def tokenize(self, text):
         self.raw_tokens = self.tagger.parse(text)
-        _tokens = [self._format(neologdn.normalize(w) if self.normalize else w)
-                   for w in self.raw_tokens.split()]
+        _tokens = [self._format(w) for w in self.raw_tokens.split()]
         self.tokens = [w for w in _tokens if w is not '']
         return self.tokens
     
