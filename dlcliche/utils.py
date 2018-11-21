@@ -300,6 +300,11 @@ def df_read_sjis_csv(filename, **args):
     with codecs.open(filename, 'r', 'Shift-JIS', 'ignore') as file:
         return pd.read_table(file, delimiter=',', **args)
 
+import unicodedata
+def unicode_visible_width(unistr):
+    """Returns the number of printed characters in a Unicode string."""
+    return sum([1 if unicodedata.east_asian_width(char) in ['N', 'Na'] else 2 for char in unistr])
+
 ## Dataset utilities
 
 from imblearn.over_sampling import RandomOverSampler
