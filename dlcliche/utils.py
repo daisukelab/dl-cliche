@@ -215,6 +215,11 @@ def show_text_diff(text, n_text):
             raise RuntimeError
     return ''.join(output)
 
+import unicodedata
+def unicode_visible_width(unistr):
+    """Returns the number of printed characters in a Unicode string."""
+    return sum([1 if unicodedata.east_asian_width(char) in ['N', 'Na'] else 2 for char in unistr])
+
 ## Pandas utilities
 
 def df_to_csv_excel_friendly(df, filename):
@@ -239,15 +244,19 @@ def df_merge_update(df_list_or_org_file, opt_joining_file=None):
         master = tmp_df[~tmp_df.index.duplicated(keep='last')].sort_index()
     return master
 
-def df_select_by_keyword(source_df, keyword, search_columns=None):
+def df_select_by_keyword(source_df, keyword, search_columns=None, as_mask=False):
     """Select data frame rows by a search keyword.
+    Any row will be selected if any of its search columns contain the keyword.
     
     Returns:
         New data frame where rows have the keyword.
     """
     search_columns = search_columns or source_df.columns
-    mask = np.column_stack([source_df[col].str.contains(keyword, na=False) for col in search_columns])
-    return source_df.loc[mask.any(axis=1)]
+    masks = np.column_stack([source_df[col].str.contains(keyword, na=False) for col in search_columns])
+    mask = masks.any(axis=1)
+    if as_mask:
+        return mask
+    return source_df.loc[mask]
 
 def df_str_replace(df, from_strs, to_str):
     """Apply str.replace to entire DataFrame inplace."""
@@ -299,11 +308,6 @@ def df_read_sjis_csv(filename, **args):
     """
     with codecs.open(filename, 'r', 'Shift-JIS', 'ignore') as file:
         return pd.read_table(file, delimiter=',', **args)
-
-import unicodedata
-def unicode_visible_width(unistr):
-    """Returns the number of printed characters in a Unicode string."""
-    return sum([1 if unicodedata.east_asian_width(char) in ['N', 'Na'] else 2 for char in unistr])
 
 ## Dataset utilities
 

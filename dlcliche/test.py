@@ -1,4 +1,5 @@
 from .general import *
+from debtcollector import removals
 import unittest
 
 def recursive_test_array(cls, a, b, msg=None, fn=None):
@@ -20,7 +21,7 @@ def recursive_test_array(cls, a, b, msg=None, fn=None):
     else:
         fn(a, b, msg=msg)
 
-def test_exactly_the_same_df(title, df1, df2, fillna=True, filler=0):
+def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
     """Test two pandas DataFrames are the same.
     And shows where differences are.
 
@@ -43,3 +44,7 @@ def test_exactly_the_same_df(title, df1, df2, fillna=True, filler=0):
         print(title, 'Failed:', e)
         result = False
     return result
+
+@removals.remove
+def test_exactly_the_same_df(title, df1, df2, fillna=True, filler=0):
+    return test_exactly_same_df(title, df1, df2, fillna=fillna, filler=filler)
