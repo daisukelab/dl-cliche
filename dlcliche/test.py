@@ -1,5 +1,5 @@
 from .general import *
-from debtcollector import removals
+from .system import deprecated
 import unittest
 
 def recursive_test_array(cls, a, b, msg=None, fn=None):
@@ -45,6 +45,6 @@ def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
         result = False
     return result
 
-@removals.remove
+@deprecated
 def test_exactly_the_same_df(title, df1, df2, fillna=True, filler=0):
     return test_exactly_same_df(title, df1, df2, fillna=fillna, filler=filler)
