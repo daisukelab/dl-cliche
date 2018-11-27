@@ -186,25 +186,45 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
 
 MAX_EXCEL_COL_WIDTH = 20
-def df_to_xlsx(df, folder, stem_name, max_col_width=None, ws_name=None, index_filter=None):
+def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
+               ws_name=None, index_filter=None, view_left_col=None):
     """Write df to Excel .xlsx file.
     Column width will be adjusted to fit the contents.
+    Active cell will be set to the top column of last row.
 
     Args:
         df: DataFrame to write.
         folder: Destination folder to place writing file.
         stem_name: File stem; 'abc' will set file name as 'abc.xlsx'.
-        max_col_width: Maximum column width to prevent column gets too wide. None will not limit width.
+        template: Template workbook filename.
+        max_col_width: (Valid when template is None) Maximum column width
+            to prevent column gets too wide. None will not limit width.
         ws_name: Work sheet name. None will set stem_name as work sheet name.
         index_filter: Function to filter index.
+        view_left_col: View's leftmost column letter. ex) 'M', 'AL'
     Returns:
         Written path name.
     """
     pathname = (Path(folder)/stem_name).with_suffix('.xlsx')
-    wb = opx.Workbook()
-    wb.active.title = ws_name or stem_name
-    opx_df_to_ws(wb, stem_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
-    if max_col_width:
-        opx_auto_adjust_column_width(wb[stem_name], max_width=max_col_width, dont_narrower=False)
+    wb = opx.load_workbook(template) or opx.Workbook()
+    ws_name = ws_name or stem_name
+    wb.active.title = ws_name
+    opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
+    if template:
+        opx_duplicate_style(wb[ws_name], row_src=2, row_dest=3,
+                        n_row=len(df)-3+1, debug=False)
+    else:
+        opx_auto_adjust_column_width(wb[ws_name], max_width=max_col_width, dont_narrower=False)
+    
+    # Move active cell to last row
+    for i in range(len(wb[ws_name].sheet_view.selection)):
+        # Set to active pane only
+        if wb[ws_name].sheet_view.pane.activePane != wb[ws_name].sheet_view.selection[i].pane: continue
+        # Set active cell
+        wb[ws_name].sheet_view.selection[i].activeCell = f'A{len(df)+1}'
+        wb[ws_name].sheet_view.selection[i].sqref = wb[ws_name].sheet_view.selection[i].activeCell
+    if view_left_col:
+        wb[ws_name].sheet_view.pane.topLeftCell = f'{view_left_col}{int(np.max([len(df)-3, 2]))}'
+
     wb.save(pathname)
     return pathname
