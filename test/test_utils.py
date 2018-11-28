@@ -151,5 +151,11 @@ class TestUtils(unittest.TestCase):
         release_file_mutex()
         self.assertFalse(is_file_mutex_locked())
 
+    def test_date(self):
+        self.assertEqual(str_to_date('2010/1/23'), datetime.date(2010, 1, 23))
+        self.assertEqual(str_to_date('2010/01/23'), datetime.date(2010, 1, 23))
+        self.assertEqual(str_to_date('2010-1-2'), datetime.date(2010, 1, 2))
+        self.assertEqual(str_to_date('2010-01-02'), datetime.date(2010, 1, 2))
+
 if __name__ == '__main__':
     unittest.main()

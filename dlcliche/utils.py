@@ -8,6 +8,7 @@ import pandas as pd
 from easydict import EasyDict
 from tqdm import tqdm_notebook
 import shutil
+import datetime
 
 ## File utilities
 
@@ -137,7 +138,6 @@ def get_logger(name=None, level=logging.DEBUG, format=None, print=True, output_f
 
 ## Multi process utilities
 
-import datetime
 def caller_func_name(level=2):
     """Return caller function name."""
     return sys._getframe(level).f_code.co_name
@@ -161,6 +161,15 @@ def is_file_mutex_locked(filename=None):
     """Check if file mutex is locked or not."""
     filename = _file_mutex_filename(filename)
     return Path(filename).exists()
+
+## Date utilities
+
+def str_to_date(text):
+    if '/' in text:
+        temp_dt = datetime.datetime.strptime(text, '%Y/%m/%d')
+    else:
+        temp_dt = datetime.datetime.strptime(text, '%Y-%m-%d')
+    return datetime.date(temp_dt.year, temp_dt.month, temp_dt.day)
 
 ## List utilities
 
