@@ -66,9 +66,12 @@ for folder_id in sub_folders:
                 lines = f.read()
             lines = doc_filter_begin.sub('', lines)
             lines = doc_filter_end.sub('', lines)
+            lines = lines.split('\n')
             try:
-                tokens = tokenizer.tokenize(lines)
-                out_f.write(' '.join(tokens)+' ')
+                for line in lines:
+                    if len(line) == 0: continue
+                    tokens = tokenizer.tokenize(line)
+                    out_f.write(' '.join(tokens)+'\n')
             except:
                 print('!!! Tokenizer failed. Skipped:', file)
 

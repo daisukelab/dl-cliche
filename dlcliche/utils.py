@@ -370,7 +370,14 @@ def balance_class_by_under_sampling(X, y, random_state=42):
     """Balance class distribution with imbalanced-learn RandomUnderSampler."""
     return  _balance_class(X, y, 'min', RandomUnderSampler, random_state)
 
-def visualize_class_balance(title, y, labels):
+def _expand_labels_from_y(y, labels):
+    if labels is None:
+        labels = sorted(list(set(y)))
+        y = [labels.index(_y) for _y in y]
+    return y, labels
+
+def visualize_class_balance(title, y, labels=None, sorted=False):
+    y, labels = _expand_labels_from_y(y, labels)
     sample_dist_list = get_class_distribution_list(y, len(labels))
     if sorted:
         items = list(zip(labels, sample_dist_list))
@@ -388,7 +395,8 @@ def visualize_class_balance(title, y, labels):
     fig.show()
 
 from collections import OrderedDict
-def print_class_balance(title, y, labels, sorted=False):
+def print_class_balance(title, y, labels=None, sorted=False):
+    y, labels = _expand_labels_from_y(y, labels)
     distributions = get_class_distribution(y)
     dist_dic = {labels[cls]:distributions[cls] for cls in distributions}
     if sorted:
