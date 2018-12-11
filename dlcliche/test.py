@@ -22,10 +22,10 @@ def recursive_test_array(cls, a, b, msg=None, fn=None):
         fn(a, b, msg=msg)
 
 def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
-    """Test two pandas DataFrames are the same.
+    """Test that two pandas DataFrames are the same.
     And shows where differences are.
 
-    Args:
+    Arguments:
         fillna: Fill N/A beforehand or not. Note that N/A is always False when compared.
         filler: Valid if fillna=True, filling value to feed to pandas fillna().
     """

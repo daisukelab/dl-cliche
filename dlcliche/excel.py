@@ -9,7 +9,7 @@ def opx_copy_cell(source_cell, target_cell, style_copy=False):
     """openpyxl helper: Copy cell from source to target.
     Cells can be on different sheets.
 
-    Args:
+    Arguments:
         style_copy: Flag to copy style or not.
     """
     target_cell._value = source_cell._value
@@ -29,7 +29,7 @@ def opx_copy_cell_style(source_cell, target_cell):
 def opx_copy_row(sh_src, row_src, sh_dest, row_dest, n_col=None, style_copy=False, debug=False):
     """openpyxl helper: Copy row.
 
-    Args:
+    Arguments:
         sh_src: Source sheet.
         row_src: Source row number, range is as usual: `[0, max-1]`.
         sh_dest: Destination sheet.
@@ -48,7 +48,7 @@ def opx_copy_row(sh_src, row_src, sh_dest, row_dest, n_col=None, style_copy=Fals
 def opx_duplicate_style(sh, row_src, row_dest, n_row=None, debug=False):
     """openpyxl helper: Copy style among rows.
 
-    Args:
+    Arguments:
         sh: Sheet.
         row_src: Source row number, range is as usual: `[0, max-1]`.
         row_dest: Destination row number, same range as source.
@@ -78,7 +78,7 @@ def opx_remove_illegal_char(data):
 def opx_df_to_ws(workbook, sheetname, df, start_row=1, start_col=1, index=True, header=True, index_filter=None):
     """Write all data in a DataFrame to Excel worksheet.
     
-    Args:
+    Arguments:
         workbook: Target workbook object.
         sheetname: Target worksheet name, will be created if not there.
         df: DataFrame object to read from.
@@ -126,7 +126,7 @@ def opx_bar_chart(dest_ws, RC, src_ws, TL, BR, figtitle='', xtitle='', ytitle=''
     """Draw bar chart of source data placed in a rectangle area.
     Leftmost column is index (= category).
     
-    Args:
+    Arguments:
         dest_ws: Worksheet to append bar chart.
         RC: Row and column position to append bar chart.
         src_ws: Worksheet where chart data are.
@@ -160,7 +160,7 @@ def opx_bar_chart(dest_ws, RC, src_ws, TL, BR, figtitle='', xtitle='', ytitle=''
 def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scaling=1.1, dont_narrower=False):
     """Auto adjust all column width in a worksheet.
     
-    Args:
+    Arguments:
         worksheet: Worksheet object to adjust in place.
         max_width: Max width to limit, or setting None will not limit.
         default_width: Default width, used only when dont_narrower is True.
@@ -192,7 +192,7 @@ def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
     Column width will be adjusted to fit the contents.
     Active cell will be set to the top column of last row.
 
-    Args:
+    Arguments:
         df: DataFrame to write.
         folder: Destination folder to place writing file.
         stem_name: File stem; 'abc' will set file name as 'abc.xlsx'.

@@ -70,7 +70,7 @@ def convert_mono_to_jpg(fromfile, tofile):
     Linear copy to RGB channels. 
     https://docs.opencv.org/3.1.0/de/d25/imgproc_color_conversions.html
 
-    Args:
+    Arguments:
         fromfile: float png mono image
         tofile: RGB color jpeg image.
     """
@@ -369,6 +369,18 @@ def balance_class_by_over_sampling(X, y, random_state=42):
 def balance_class_by_under_sampling(X, y, random_state=42):
     """Balance class distribution with imbalanced-learn RandomUnderSampler."""
     return  _balance_class(X, y, 'min', RandomUnderSampler, random_state)
+
+def df_balance_class_by_over_sampling(df, label_column, random_state=42):
+    """Balance class distribution in DataFrame with imbalanced-learn RandomOverSampler."""
+    X, y = list(range(len(df))), list(df[label_column])
+    X, _ = balance_class_by_over_sampling(X, y, random_state=random_state)
+    return df.iloc[X].sort_index()
+
+def df_balance_class_by_under_sampling(df, label_column, random_state=42):
+    """Balance class distribution in DataFrame with imbalanced-learn RandomUnderSampler."""
+    X, y = list(range(len(df))), list(df[label_column])
+    X, _ = balance_class_by_under_sampling(X, y, random_state=random_state)
+    return df.iloc[X].sort_index()
 
 def _expand_labels_from_y(y, labels):
     if labels is None:
