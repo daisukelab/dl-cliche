@@ -65,24 +65,6 @@ def symlink_file(fromfile, tofile):
     """Make fromfile's symlink as tofile."""
     Path(tofile).symlink_to(fromfile)
 
-def convert_mono_to_jpg(fromfile, tofile):
-    """Convert monochrome image to color jpeg format.
-    Linear copy to RGB channels. 
-    https://docs.opencv.org/3.1.0/de/d25/imgproc_color_conversions.html
-
-    Arguments:
-        fromfile: float png mono image
-        tofile: RGB color jpeg image.
-    """
-    img = np.array(Image.open(fromfile))
-    img = img - np.min(img)
-    img = img / (np.max(img) + 1e-4)
-    img = (img * 255).astype(np.uint8) # [0,1) float to [0,255] uint8
-    img = np.repeat(img[..., np.newaxis], 3, axis=-1) # mono to RGB color
-    img = Image.fromarray(img)
-    tofile = Path(tofile)
-    img.save(tofile.with_suffix('.jpg'), 'JPEG', quality=100)
-
 def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
     """Do file copy like operation from files to dest_folder.
     
