@@ -21,6 +21,42 @@ def opx_copy_cell(source_cell, target_cell, style_copy=False):
     if source_cell.comment:
         target_cell.comment = copy(source_cell.comment)
 
+def opx_color_cell(cell, rgb='00FF0000', pattern_type='solid', negative_rgb=None, keywords=None):
+    """openpyxl helper: Set cell color and its pattern.
+    If keywords are listed, apply only when any keyword is in value string,
+    and if negative_rgb is also set, this color will be set if no keyword matches.
+    Thanks to https://stackoverflow.com/questions/30484220/python-fill-cells-with-colors-using-openpyxl
+    
+    Arguments:
+        cell: The cell to set color.
+        rgb: Cell color.
+        pattern_type: Cell filling pattern.
+        negative_rgb: Valid only keywords are listed, set this color when no keyword maches.
+        keywords: List of keyword texts. Color will be set if any of keyword matches.
+
+    Returns:
+        Color was set (True) or not (False) when keywords are listed.
+        Always True if no keywords being set.
+    """
+    if keywords is not None:
+        text = str(cell._value)
+        apply_color = False
+        for k in keywords:
+            if re.search(k, text) is not None:
+                apply_color = True
+                break
+        if not apply_color and negative_rgb is not None:
+            apply_color = True
+            rgb = negative_rgb
+    else:
+        apply_color = True
+
+    if apply_color:
+        this_color = opx.styles.colors.Color(rgb=rgb)
+        this_fill = opx.styles.fills.PatternFill(patternType=pattern_type, fgColor=this_color)
+        cell.fill = this_fill
+    return apply_color
+
 def opx_copy_cell_style(source_cell, target_cell):
     """openpyxl helper: Copy cell style only from source to target.
     """
@@ -186,6 +222,32 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
 
 MAX_EXCEL_COL_WIDTH = 20
+def df_to_excel_workbook(df, template=None, max_col_width=None,
+                         ws_name='untitled', index_filter=None, view_left_col=None):
+    """Write df to Excel workbook object.
+    Refer to df_to_xlsx for the detail.
+    """
+    wb = opx.load_workbook(template) or opx.Workbook()
+    wb.active.title = ws_name
+    opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
+    if template:
+        opx_duplicate_style(wb[ws_name], row_src=2, row_dest=3,
+                        n_row=len(df)-3+1, debug=False)
+    else:
+        opx_auto_adjust_column_width(wb[ws_name], max_width=max_col_width, dont_narrower=False)
+    
+    # Move active cell to last row
+    for i in range(len(wb[ws_name].sheet_view.selection)):
+        # Set to active pane only
+        if wb[ws_name].sheet_view.pane.activePane != wb[ws_name].sheet_view.selection[i].pane: continue
+        # Set active cell
+        wb[ws_name].sheet_view.selection[i].activeCell = f'A{len(df)+1}'
+        wb[ws_name].sheet_view.selection[i].sqref = wb[ws_name].sheet_view.selection[i].activeCell
+    if view_left_col:
+        wb[ws_name].sheet_view.pane.topLeftCell = f'{view_left_col}{int(np.max([len(df)-3, 2]))}'
+
+    return wb
+
 def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
                ws_name=None, index_filter=None, view_left_col=None):
     """Write df to Excel .xlsx file.
@@ -206,25 +268,9 @@ def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
         Written path name.
     """
     pathname = (Path(folder)/stem_name).with_suffix('.xlsx')
-    wb = opx.load_workbook(template) or opx.Workbook()
     ws_name = ws_name or stem_name
-    wb.active.title = ws_name
-    opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
-    if template:
-        opx_duplicate_style(wb[ws_name], row_src=2, row_dest=3,
-                        n_row=len(df)-3+1, debug=False)
-    else:
-        opx_auto_adjust_column_width(wb[ws_name], max_width=max_col_width, dont_narrower=False)
-    
-    # Move active cell to last row
-    for i in range(len(wb[ws_name].sheet_view.selection)):
-        # Set to active pane only
-        if wb[ws_name].sheet_view.pane.activePane != wb[ws_name].sheet_view.selection[i].pane: continue
-        # Set active cell
-        wb[ws_name].sheet_view.selection[i].activeCell = f'A{len(df)+1}'
-        wb[ws_name].sheet_view.selection[i].sqref = wb[ws_name].sheet_view.selection[i].activeCell
-    if view_left_col:
-        wb[ws_name].sheet_view.pane.topLeftCell = f'{view_left_col}{int(np.max([len(df)-3, 2]))}'
-
+    wb = df_to_excel_workbook(df, template=template, max_col_width=max_col_width,
+                              ws_name=ws_name, index_filter=index_filter,
+                              view_left_col=view_left_col)
     wb.save(pathname)
     return pathname

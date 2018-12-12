@@ -240,11 +240,29 @@ def df_select_by_keyword(source_df, keyword, search_columns=None, as_mask=False)
     Any row will be selected if any of its search columns contain the keyword.
     
     Returns:
-        New data frame where rows have the keyword.
+        New data frame where rows have the keyword,
+        or mask if as_mask is True.
     """
     search_columns = search_columns or source_df.columns
     masks = np.column_stack([source_df[col].str.contains(keyword, na=False) for col in search_columns])
     mask = masks.any(axis=1)
+    if as_mask:
+        return mask
+    return source_df.loc[mask]
+
+def df_select_by_keywords(source_df, keys_cols, and_or='or', as_mask=False):
+    """Multi keyword version of df_select_by_keyword.
+
+    Arguments:
+        key_cols: dict defined as `{'keyword1': [search columns] or None, ...}`
+    """
+    masks = []
+    for keyword in keys_cols:
+        columns = keys_cols[keyword]
+        mask = df_select_by_keyword(source_df, keyword, search_columns=columns, as_mask=True)
+        masks.append(mask)
+    mask = np.column_stack(masks).any(axis=1) if and_or == 'or' else \
+           np.column_stack(masks).all(axis=1)
     if as_mask:
         return mask
     return source_df.loc[mask]
