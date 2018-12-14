@@ -222,13 +222,20 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
 
 MAX_EXCEL_COL_WIDTH = 20
-def df_to_excel_workbook(df, template=None, max_col_width=None,
+def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None,
                          ws_name='untitled', index_filter=None, view_left_col=None):
     """Write df to Excel workbook object.
     Refer to df_to_xlsx for the detail.
     """
-    wb = opx.load_workbook(template) or opx.Workbook()
-    wb.active.title = ws_name
+    # Remember using active sheet or not
+    use_active_sheet = wb is None
+    # Use/open new/open template workbook
+    wb = wb or opx.Workbook()
+    if template: wb = opx.load_workbook(template)
+    # Set sheetname if new or template
+    if use_active_sheet:
+        wb.active.title = ws_name
+    # Set contents
     opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
     if template:
         opx_duplicate_style(wb[ws_name], row_src=2, row_dest=3,
@@ -238,8 +245,10 @@ def df_to_excel_workbook(df, template=None, max_col_width=None,
     
     # Move active cell to last row
     for i in range(len(wb[ws_name].sheet_view.selection)):
-        # Set to active pane only
-        if wb[ws_name].sheet_view.pane.activePane != wb[ws_name].sheet_view.selection[i].pane: continue
+        if wb[ws_name].sheet_view.pane is not None:
+            # Set to active pane only
+            if wb[ws_name].sheet_view.pane.activePane != wb[ws_name].sheet_view.selection[i].pane:
+                continue
         # Set active cell
         wb[ws_name].sheet_view.selection[i].activeCell = f'A{len(df)+1}'
         wb[ws_name].sheet_view.selection[i].sqref = wb[ws_name].sheet_view.selection[i].activeCell
@@ -269,7 +278,7 @@ def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
     """
     pathname = (Path(folder)/stem_name).with_suffix('.xlsx')
     ws_name = ws_name or stem_name
-    wb = df_to_excel_workbook(df, template=template, max_col_width=max_col_width,
+    wb = df_to_excel_workbook(df, wb=None, template=template, max_col_width=max_col_width,
                               ws_name=ws_name, index_filter=index_filter,
                               view_left_col=view_left_col)
     wb.save(pathname)
