@@ -222,8 +222,8 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
 
 MAX_EXCEL_COL_WIDTH = 20
-def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None,
-                         ws_name='untitled', index_filter=None, view_left_col=None):
+def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name='untitled',
+                         index_filter=None, view_left_col=None, copy_style=True):
     """Write df to Excel workbook object.
     Refer to df_to_xlsx for the detail.
     """
@@ -237,7 +237,7 @@ def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None,
         wb.active.title = ws_name
     # Set contents
     opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
-    if template:
+    if copy_style:
         opx_duplicate_style(wb[ws_name], row_src=2, row_dest=3,
                         n_row=len(df)-3+1, debug=False)
     else:
