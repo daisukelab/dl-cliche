@@ -4,16 +4,16 @@ import cv2
 from multiprocessing import Pool
 
 def _resize_worker(dest_folder, list_of_files, shape):
-    files = []
+    results = []
     for source_imgpath in list_of_files:
         img = cv2.imread(str(source_imgpath))
         resized_img = cv2.resize(img, shape)
         outfile = str(Path(dest_folder)/Path(source_imgpath).name)
         cv2.imwrite(outfile, resized_img)
-        files.append(outfile)
-    return files
+        results.append((outfile, (img.shape[1], img.shape[0])))
+    return results
 
-def resize_image_file(dest_folder, source_files, shape=(224, 224), num_threads=4):
+def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=4):
     """Make resized copy of listed images in parallel processes.
 
     Arguments:
@@ -21,14 +21,24 @@ def resize_image_file(dest_folder, source_files, shape=(224, 224), num_threads=4
         source_files: Source image files.
         shape: (Width, Depth) shape of copies.
         num_threads: Number of parallel workers.
+
+    Returns:
+        List of image info (filename, original size) tuples.
+        ex)
+        ```python
+        [('tmp/8d6ed7c786dcbc93.jpg', (1024, 508)),
+         ('tmp/8d6ee9921e4aeb18.jpg', (891, 1024)),
+         ('tmp/8d6f00feedb09efa.jpg', (1024, 683))]
+        ```
     """
     with Pool(num_threads) as p:
         ns = len(source_files) // num_threads
         ensure_folder(dest_folder)
-        p.starmap(_resize_worker, [(dest_folder, source_files[ns*i:ns*(i+1)] if i < num_threads-1
+        returns = p.starmap(_resize_worker, [(dest_folder, source_files[ns*i:ns*(i+1)] if i < num_threads-1
                                                      else source_files[ns*(num_threads-1):], shape)
-                                    for i in range(num_threads)])
-            
+                                             for i in range(num_threads)])
+        return flatten_list(returns)
+
 def convert_mono_to_jpg(fromfile, tofile):
     """Convert monochrome image to color jpeg format.
     Linear copy to RGB channels. 
