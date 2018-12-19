@@ -1,20 +1,39 @@
-# dl-cliche: A small python library to summarize all cliche codes
+# dl-cliche: A small python module to summarize all cliche codes
 
-## For a python code
+For Japanese: 日本語で解説記事を用意しました。 ⇒ [機械学習個人レベルのワークフロー改善@Qiita](https://qiita.com/daisukelab/items/109812791d369891b812)
+
+This is a python module created for local use, but also addresses widely common tiny issues.
+
+You can replace cliche like this:
 
 ```python
-# import sys
-# sys.path.append('path/to/py-cliche')
-from dlcliche.general import *
-from dlcliche.ignore_warnings import *
+%matplotlib inline
+%reload_ext autoreload
+%autoreload 2
 ```
 
-## For a jupyter notebook
+with following one liner.
 
 ```python
-# import sys
-# sys.path.append('path/to/py-cliche')
 from dlcliche.notebook import *
-from dlcliche.general import *
-from dlcliche.ignore_warnings import *
 ```
+
+## Quickstart for a python code
+
+```python
+from dlcliche.utils import *
+```
+
+Then you can simply start your code that uses numpy, pandas or utility like:
+
+- `get_logger()` to make default logger instance.
+- `lock_file_mutex()` to make OS dependency-free mutex lock.
+- and so on...
+
+## Quickstart for a jupyter notebook
+
+```python
+from dlcliche.notebook import *
+from dlcliche.utils import *
+```
+
