@@ -213,9 +213,9 @@ def unicode_visible_width(unistr):
 
 ## Pandas utilities
 
-def df_to_csv_excel_friendly(df, filename):
+def df_to_csv_excel_friendly(df, filename, **args):
     """df.to_csv() to be excel friendly UTF-8 handling."""
-    df.to_csv(filename, encoding='utf_8_sig')
+    df.to_csv(filename, encoding='utf_8_sig', **args)
 
 def df_merge_update(df_list_or_org_file, opt_joining_file=None):
     """Merge data frames while update duplicated index with following (joining) row.
