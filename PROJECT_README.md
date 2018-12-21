@@ -32,7 +32,7 @@ What are actions to achive goal by using what resources and following policies.
 - Metrics.
 - Criterion.
 
-## Process detail.
+## Process detail
 - Dataset policy, how to handle dataset.
 - Training policy, how to train models.
 - Parameter policy, what are parameters, and policies for them.
@@ -50,4 +50,9 @@ What are actions to achive goal by using what resources and following policies.
 - Takeaways.
 - Lessons.
 - Reports.
+
+## Hypothesis
+Leave notes of hypotheses and verification results in this project.
+
+### H1. Variable A & B ...
 

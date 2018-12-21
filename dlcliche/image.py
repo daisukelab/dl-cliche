@@ -7,10 +7,11 @@ def _resize_worker(dest_folder, list_of_files, shape):
     results = []
     for source_imgpath in list_of_files:
         img = cv2.imread(str(source_imgpath))
-        resized_img = cv2.resize(img, shape)
+        if shape is not None:
+            img = cv2.resize(img, shape)
         outfile = str(Path(dest_folder)/Path(source_imgpath).name)
-        cv2.imwrite(outfile, resized_img)
-        results.append((outfile, (img.shape[1], img.shape[0])))
+        cv2.imwrite(outfile, img)
+        results.append((outfile, (img.shape[1], img.shape[0]))) # original size
     return results
 
 def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=4, skip_if_any_there=False):
@@ -19,7 +20,7 @@ def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=
     Arguments:
         dest_folder: Destination folder to make copies.
         source_files: Source image files.
-        shape: (Width, Depth) shape of copies.
+        shape: (Width, Depth) shape of copies. None will NOT resize and makes dead copy.
         num_threads: Number of parallel workers.
         skip_if_any_there: If True, skip processing processing if any file have already been done.
 
