@@ -81,3 +81,44 @@ def convert_mono_to_jpg(fromfile, tofile):
     tofile = Path(tofile)
     img.save(tofile.with_suffix('.jpg'), 'JPEG', quality=100)
 
+# Borrowing from fast.ai
+
+from matplotlib import patches, patheffects
+
+def subplot_matrix(rows, columns, figsize=(12, 12)):
+    """Subplot utility for drawing matrix of images.
+    # Usage
+    Following will show images in 2x3 matrix.
+    ```python
+    axes = subplot_matrix(2, 3)
+    for img, ax in zip(images, axes):
+        show_image(img, ax=ax)
+    ```
+    """
+    fig, axes = plt.subplots(rows, columns, figsize=figsize)
+    return list(axes.flat)
+
+def show_image(img, figsize=None, ax=None):
+    if not ax: fig,ax = plt.subplots(figsize=figsize)
+    ax.imshow(img)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    return ax
+
+def _draw_outline(o, lw):
+    o.set_path_effects([patheffects.Stroke(
+        linewidth=lw, foreground='black'), patheffects.Normal()])
+
+def ax_draw_rect(ax, b):
+    patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor='white', lw=2))
+    _draw_outline(patch, 4)
+
+def ax_draw_text(ax, xy, txt, sz=14):
+    text = ax.text(*xy, txt,
+        verticalalignment='top', color='white', fontsize=sz, weight='bold')
+    _draw_outline(text, 1)
+
+def ax_draw_bbox(ax, bbox, class_name):
+    """Object Detection Helper: Draw single bounding box with class name on top of image."""
+    ax_draw_rect(ax, bbox)
+    ax_draw_text(ax, bbox[:2], class_name)
