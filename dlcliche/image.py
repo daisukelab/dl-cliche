@@ -1,6 +1,8 @@
 from .utils import *
 
 import cv2
+import tqdm
+from PIL import Image
 from multiprocessing import Pool
 
 def _resize_worker(dest_folder, list_of_files, shape):
@@ -43,6 +45,15 @@ def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=
                                                      else source_files[ns*(num_threads-1):], shape)
                                              for i in range(num_threads)])
         return flatten_list(returns)
+
+def _get_shape_worker(filename):
+    return Image.open(filename).size # Image.open() is much faster than cv2.imread()
+
+def read_file_shapes(files, num_threads=8):
+    """Read shape of files in parallel."""
+    with Pool(num_threads) as p:
+        shapes = list(tqdm.tqdm(p.imap(_get_shape_worker, files), total=len(files)))
+    return np.array(shapes)
 
 def load_rgb_image(filename):
     """Load image file and make sure that format is RGB."""

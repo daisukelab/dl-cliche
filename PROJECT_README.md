@@ -25,7 +25,7 @@ Some more project description, preferably define followings:
 - By DD-MM Do that.
 
 ## Storategy
-What are actions to achive goal by using what resources and following policies.
+What are actions to achive goals by using what resources and following policies.
 
 - Initial preparations.
 - Process/Flow.
