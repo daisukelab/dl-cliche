@@ -5,18 +5,19 @@ import tqdm
 from PIL import Image
 from multiprocessing import Pool
 
-def _resize_worker(dest_folder, list_of_files, shape):
-    results = []
-    for source_imgpath in list_of_files:
-        img = cv2.imread(str(source_imgpath))
-        if shape is not None:
-            img = cv2.resize(img, shape)
-        outfile = str(Path(dest_folder)/Path(source_imgpath).name)
-        cv2.imwrite(outfile, img)
-        results.append((outfile, (img.shape[1], img.shape[0]))) # original size
-    return results
+def resize_image(dest_folder, filename, shape):
+    """Resize and save copy of image file to destination folder."""
+    img = cv2.imread(str(filename))
+    if shape is not None:
+        img = cv2.resize(img, shape)
+    outfile = str(Path(dest_folder)/Path(filename).name)
+    cv2.imwrite(outfile, img)
+    return outfile, (img.shape[1], img.shape[0]) # original size
 
-def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=4, skip_if_any_there=False):
+def _resize_image_worker(args):
+    return resize_image(args[0], args[1], args[2])
+
+def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=8, skip_if_any_there=False):
     """Make resized copy of listed images in parallel processes.
 
     Arguments:
@@ -38,13 +39,13 @@ def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=
     if skip_if_any_there:
         if (Path(dest_folder)/Path(source_files[0]).name).exists():
             return None
+    # Create destination folder if needed
+    ensure_folder(dest_folder)
+    # Do resize
     with Pool(num_threads) as p:
-        ns = len(source_files) // num_threads
-        ensure_folder(dest_folder)
-        returns = p.starmap(_resize_worker, [(dest_folder, source_files[ns*i:ns*(i+1)] if i < num_threads-1
-                                                     else source_files[ns*(num_threads-1):], shape)
-                                             for i in range(num_threads)])
-        return flatten_list(returns)
+        args = [[dest_folder, f, shape] for f in source_files]
+        returns = list(tqdm.tqdm(p.imap(_resize_image_worker, args), total=len(args)))
+    return returns
 
 def _get_shape_worker(filename):
     return Image.open(filename).size # Image.open() is much faster than cv2.imread()
