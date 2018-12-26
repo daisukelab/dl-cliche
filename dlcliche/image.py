@@ -3,6 +3,7 @@ from .notebook import running_in_notebook
 
 import cv2
 import tqdm
+import math
 from PIL import Image
 from multiprocessing import Pool
 
@@ -73,19 +74,6 @@ def load_rgb_image(filename):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
-def render_bbox(img, bbox, class_name, color=(255, 0, 0), text_color=(255, 255, 255), thickness=1):
-    """Object Detection Helper: Render single bounding box with class name on top of image.
-    Thanks to https://github.com/facebookresearch/Detectron/blob/master/detectron/utils/vis.py
-    """
-    x_min, y_min, w, h = bbox
-    x_min, x_max, y_min, y_max = int(x_min), int(x_min + w), int(y_min), int(y_min + h)
-    cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color=color, thickness=thickness)
-    ((text_width, text_height), _) = cv2.getTextSize(class_name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)    
-    cv2.rectangle(img, (x_min, y_min - int(1.5 * text_height)), (x_min + text_width, y_min), color, -1)
-    cv2.putText(img, class_name, (x_min, y_min - int(0.3 * text_height)), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                text_color, thickness=2, lineType=cv2.LINE_AA)
-    return img
-
 def convert_mono_to_jpg(fromfile, tofile):
     """Convert monochrome image to color jpeg format.
     Linear copy to RGB channels. 
@@ -104,10 +92,8 @@ def convert_mono_to_jpg(fromfile, tofile):
     tofile = Path(tofile)
     img.save(tofile.with_suffix('.jpg'), 'JPEG', quality=100)
 
-# Borrowing from fast.ai
-
+# Borrowing from fast.ai course notebook
 from matplotlib import patches, patheffects
-
 def subplot_matrix(rows, columns, figsize=(12, 12)):
     """Subplot utility for drawing matrix of images.
     # Usage
@@ -120,31 +106,40 @@ def subplot_matrix(rows, columns, figsize=(12, 12)):
     """
     fig, axes = plt.subplots(rows, columns, figsize=figsize)
     return list(axes.flat)
-
 def show_image(img, figsize=None, ax=None):
+    """Show image with figsize on axes of subplot.
+    Using this with subplot_matrix() will make it easy to plot matrix of images.
+
+    # Returns
+        Axes of subplot created, or given."""
     if not ax: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(img)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     return ax
-
 def _draw_outline(o, lw):
     o.set_path_effects([patheffects.Stroke(
         linewidth=lw, foreground='black'), patheffects.Normal()])
-
 def ax_draw_rect(ax, b):
     patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor='white', lw=2))
     _draw_outline(patch, 4)
-
 def ax_draw_text(ax, xy, txt, sz=14):
     text = ax.text(*xy, txt,
         verticalalignment='top', color='white', fontsize=sz, weight='bold')
     _draw_outline(text, 1)
-
 def ax_draw_bbox(ax, bbox, class_name):
     """Object Detection Helper: Draw single bounding box with class name on top of image."""
     ax_draw_rect(ax, bbox)
     ax_draw_text(ax, bbox[:2], class_name)
+
+def show_od_data(image, bboxes, labels, class_names=None, figsize=None):
+    """Object Detection Helper: Show object detector data (set of an image, bboxes and labels)."""
+    ax = show_image(image, figsize=figsize)
+    for bbox, label in zip(bboxes, labels):
+        if class_names is not None:
+            label = class_names[label]
+        ax_draw_bbox(ax, bbox, label)
+    plt.show()
 
 def union_of_bboxes(height, width, bboxes, erosion_rate=0.0, to_int=False):
     """Calculate union bounding box of boxes.
