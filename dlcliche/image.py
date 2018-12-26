@@ -1,4 +1,5 @@
 from .utils import *
+from .notebook import running_in_notebook
 
 import cv2
 import tqdm
@@ -42,9 +43,14 @@ def resize_image_files(dest_folder, source_files, shape=(224, 224), num_threads=
     # Create destination folder if needed
     ensure_folder(dest_folder)
     # Do resize
-    with Pool(num_threads) as p:
-        args = [[dest_folder, f, shape] for f in source_files]
-        returns = list(tqdm.tqdm(p.imap(_resize_image_worker, args), total=len(args)))
+    if running_in_notebook:  # Workaround: not using pool on notebook
+        returns = []
+        for f in tqdm.tqdm(source_files, total=len(source_files)):
+            returns.append(resize_image(dest_folder, f, shape))
+    else:
+        with Pool(num_threads) as p:
+            args = [[dest_folder, f, shape] for f in source_files]
+            returns = list(tqdm.tqdm(p.imap(_resize_image_worker, args), total=len(args)))
     return returns
 
 def _get_shape_worker(filename):
@@ -52,8 +58,13 @@ def _get_shape_worker(filename):
 
 def read_file_shapes(files, num_threads=8):
     """Read shape of files in parallel."""
-    with Pool(num_threads) as p:
-        shapes = list(tqdm.tqdm(p.imap(_get_shape_worker, files), total=len(files)))
+    if running_in_notebook:  # Workaround: not using pool on notebook
+        shapes = []
+        for f in tqdm.tqdm(files, total=len(files)):
+            shapes.append(_get_shape_worker(f))
+    else:
+        with Pool(num_threads) as p:
+            shapes = list(tqdm.tqdm(p.imap(_get_shape_worker, files), total=len(files)))
     return np.array(shapes)
 
 def load_rgb_image(filename):
@@ -134,3 +145,28 @@ def ax_draw_bbox(ax, bbox, class_name):
     """Object Detection Helper: Draw single bounding box with class name on top of image."""
     ax_draw_rect(ax, bbox)
     ax_draw_text(ax, bbox[:2], class_name)
+
+def union_of_bboxes(height, width, bboxes, erosion_rate=0.0, to_int=False):
+    """Calculate union bounding box of boxes.
+
+    # Arguments
+        height (float): Height of image or space.
+        width (float): Width of image or space.
+        bboxes (list): List like bounding boxes. Format is `[x_min, y_min, x_max, y_max]`.
+        erosion_rate (float): How much each bounding box can be shrinked, useful for erosive cropping.
+            Set this in range [0, 1]. 0 will not be erosive at all, 1.0 can make any bbox to lose its volume.
+        to_int (bool): Returns as int if True.
+    """
+    x1, y1 = width, height
+    x2, y2 = 0, 0
+    for b in bboxes:
+        w, h = b[2]-b[0], b[3]-b[1]
+        lim_x1, lim_y1 = b[0] + erosion_rate*w, b[1] + erosion_rate*h
+        lim_x2, lim_y2 = b[2] - erosion_rate*w, b[3] - erosion_rate*h
+        x1, y1 = np.min([x1, lim_x1]), np.min([y1, lim_y1])
+        x2, y2 = np.max([x2, lim_x2]), np.max([y2, lim_y2])
+        #print(b, [lim_x1, lim_y1, lim_x2, lim_y2], [x1, y1, x2, y2])
+    if to_int:
+        x1, y1 = int(math.floor(x1)), int(math.floor(y1))
+        x2, y2 = int(np.min([width, math.ceil(x2)])), int(np.min([height, math.ceil(y2)]))
+    return x1, y1, x2, y2
