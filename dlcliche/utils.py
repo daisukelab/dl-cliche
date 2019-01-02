@@ -471,7 +471,7 @@ def print_clf_metrics(y_true, y_pred, average='weighted', binary_bias=None, titl
     # Add bias if binary_bias is set
     _preds = skew_bin_clf_preds(y_pred, binary_bias, logger=logger)
     # Calculate metrics
-    f1, recall, precision, acc = calculate_metrics(y_true, _preds, average=average)
+    f1, recall, precision, acc = calculate_clf_metrics(y_true, _preds, average=average)
     logger = get_logger() if logger is None else logger
     logger.info('{0:s}F1/Recall/Precision/Accuracy = {1:.4f}/{2:.4f}/{3:.4f}/{4:.4f}' \
           .format(title_prefix, f1, recall, precision, acc))
