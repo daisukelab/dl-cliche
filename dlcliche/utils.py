@@ -382,7 +382,10 @@ def df_balance_class_by_under_sampling(df, label_column, random_state=42):
     X, _ = balance_class_by_under_sampling(X, y, random_state=random_state)
     return df.iloc[X].sort_index()
 
+## Visualization utilities
+
 def _expand_labels_from_y(y, labels):
+    """Make sure y is index of label set."""
     if labels is None:
         labels = sorted(list(set(y)))
         y = [labels.index(_y) for _y in y]
@@ -420,7 +423,58 @@ def print_class_balance(title, y, labels=None, sorted=False):
     if 0 < len(zeroclasses):
         print(' 0 sample classes:', zeroclasses)
 
-## Visualization utilities
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
+
+def calculate_clf_metrics(y_true, y_pred, average='weighted'):
+    """Calculate metrics: f1/recall/precision/accuracy.
+
+    # Arguments
+        y_true: GT, an index of label or one-hot encoding format.
+        y_pred: Prediction output, index or one-hot.
+        average: `average` parameter passed to sklearn.metrics functions.
+
+    # Returns
+        Four metrics: f1, recall, precision, accuracy.
+    """
+    y_true = flatten_y_if_onehot(y_true)
+    y_pred = flatten_y_if_onehot(y_pred)
+    if np.max(y_true) < 2 and np.max(y_pred) < 2:
+        average = 'binary'
+
+    f1 = f1_score(y_true, y_pred, average=average)
+    recall = recall_score(y_true, y_pred, average=average)
+    precision = precision_score(y_true, y_pred, average=average)
+    accuracy = accuracy_score(y_true, y_pred)
+    return f1, recall, precision, accuracy
+
+def skew_bin_clf_preds(y_pred, binary_bias=None, logger=None):
+    """Apply bias to prediction results for binary classification.
+    Calculated as follows.
+        p(y=1) := p(y=1) ^ binary_bias
+        p(y=0) := 1 - p(y=0)
+    0 < binary_bias < 1 will be optimistic with result=1.
+    Inversely, 1 < binary_bias will make results pesimistic.
+    """
+    _preds = np.array(y_pred.copy())
+    if binary_bias is not None:
+        ps = np.power(_preds[:, 1], binary_bias)
+        _preds[:, 1] = ps
+        _preds[:, 0] = 1 - ps
+        logger = get_logger() if logger is None else logger
+        logger.info(f' @skew{"+" if binary_bias >= 0 else ""}{binary_bias}')
+    return _preds
+
+def print_clf_metrics(y_true, y_pred, average='weighted', binary_bias=None, title_prefix='', logger=None):
+    """Calculate and print metrics: f1/recall/precision/accuracy.
+    See calculate_clf_metrics() and skew_bin_clf_preds() for more detail.
+    """
+    # Add bias if binary_bias is set
+    _preds = skew_bin_clf_preds(y_pred, binary_bias, logger=logger)
+    # Calculate metrics
+    f1, recall, precision, acc = calculate_metrics(y_true, _preds, average=average)
+    logger = get_logger() if logger is None else logger
+    logger.info('{0:s}F1/Recall/Precision/Accuracy = {1:.4f}/{2:.4f}/{3:.4f}/{4:.4f}' \
+          .format(title_prefix, f1, recall, precision, acc))
 
 # Thanks to https://qiita.com/knknkn1162/items/be87cba14e38e2c0f656
 def plt_japanese_font_ready():

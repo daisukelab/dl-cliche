@@ -157,5 +157,34 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(str_to_date('2010-1-2'), datetime.date(2010, 1, 2))
         self.assertEqual(str_to_date('2010-01-02'), datetime.date(2010, 1, 2))
 
+    def test_clf_metrics(self):
+        N = 3
+        gts = [1, 2, 0, 1, 2]
+        results = [np.eye(N=N)[i] for i in [1, 0, 1, 1, 2]]  # One-hot
+        f1, recall, precision, acc = calculate_clf_metrics(gts, results)
+        self.assertAlmostEqual(f1, 0.5866666666666667)
+        self.assertAlmostEqual(recall, 0.6)
+        self.assertAlmostEqual(precision, 0.6666666666666666)
+        self.assertAlmostEqual(acc, 0.6)
+
+        results = [[0.4, 0.6], [0.6, 0.4], [0.3, 0.7]]
+        f1, recall, precision, acc = calculate_clf_metrics([1, 0, 1], results)
+        self.assertAlmostEqual(f1 + recall + precision + acc, 4.0)
+
+        skewed = skew_bin_clf_preds(results, binary_bias=0.5)
+        f1, recall, precision, acc = calculate_clf_metrics([1, 0, 1], skewed)
+        self.assertAlmostEqual(f1, 0.8)
+        self.assertAlmostEqual(recall, 1.0)
+        self.assertAlmostEqual(precision, 0.6666666666666666)
+        self.assertAlmostEqual(acc, 0.6666666666666666)
+
+        skewed = skew_bin_clf_preds(results, binary_bias=1.5)
+        f1, recall, precision, acc = calculate_clf_metrics([1, 0, 1], skewed)
+        self.assertAlmostEqual(f1, 0.6666666666666666)
+        self.assertAlmostEqual(recall, 0.5)
+        self.assertAlmostEqual(precision, 1.0)
+        self.assertAlmostEqual(acc, 0.6666666666666666)
+
+
 if __name__ == '__main__':
     unittest.main()
