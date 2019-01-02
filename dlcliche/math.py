@@ -7,6 +7,11 @@ def roundup(x, n=10):
     return int(math.ceil(x / n)) * n
 
 
+def np_softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
+
+
 class OnlineStats:
     """Calculate mean/variance of a vector online
     https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
@@ -41,3 +46,6 @@ class OnlineStats:
         if self.n < 2:
             return 0
         return (self.Ex2 - (self.Ex * self.Ex) / self.n) / (self.n - 1)
+
+    def count(self):
+        return self.n

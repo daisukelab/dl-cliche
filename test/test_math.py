@@ -36,7 +36,8 @@ class TesMath(unittest.TestCase):
 
         self.assertTrue(np.all([is_in_range(_1 - _2) for _1, _2 in zip(onstat.mean(), range(k))]))
         self.assertTrue(np.all([is_in_range(v, amin=3, amax=5) for v in onstat.variance()]))
-    
+        self.assertEqual(onstat.count(), n)
+
 
 if __name__ == '__main__':
     unittest.main()
