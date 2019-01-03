@@ -39,13 +39,18 @@ class OnlineStats:
 
     def mean(self):
         if self.n == 0:
-            return 0
+            return np.zeros_like(self.K)
         return self.K + self.Ex / self.n
 
     def variance(self):
         if self.n < 2:
-            return 0
+            return np.zeros_like(self.K)
         return (self.Ex2 - (self.Ex * self.Ex) / self.n) / (self.n - 1)
+
+    def sigma(self):
+        if self.n < 2:
+            return np.zeros_like(self.K)
+        return np.sqrt(self.variance())
 
     def count(self):
         return self.n
