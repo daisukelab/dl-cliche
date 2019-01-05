@@ -71,6 +71,8 @@ def read_file_shapes(files, num_threads=8):
 def load_rgb_image(filename):
     """Load image file and make sure that format is RGB."""
     img = cv2.imread(str(filename))
+    if img is None:
+        raise ValueError(f'Failed to load {filename}.')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
@@ -106,8 +108,8 @@ def subplot_matrix(rows, columns, figsize=(12, 12)):
     """
     fig, axes = plt.subplots(rows, columns, figsize=figsize)
     return list(axes.flat)
-def show_image(img, figsize=None, ax=None):
-    """Show image with figsize on axes of subplot.
+def show_np_image(img, figsize=None, ax=None):
+    """Show numpy object image with figsize on axes of subplot.
     Using this with subplot_matrix() will make it easy to plot matrix of images.
 
     # Returns
@@ -132,9 +134,9 @@ def ax_draw_bbox(ax, bbox, class_name):
     ax_draw_rect(ax, bbox)
     ax_draw_text(ax, bbox[:2], class_name)
 
-def show_od_data(image, bboxes, labels, class_names=None, figsize=None):
-    """Object Detection Helper: Show object detector data (set of an image, bboxes and labels)."""
-    ax = show_image(image, figsize=figsize)
+def show_np_od_data(image, bboxes, labels, class_names=None, figsize=None):
+    """Object Detection Helper: Show numpy object detector data (set of an image, bboxes and labels)."""
+    ax = show_np_image(image, figsize=figsize)
     for bbox, label in zip(bboxes, labels):
         if class_names is not None:
             label = class_names[label]
