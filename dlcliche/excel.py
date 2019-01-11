@@ -57,6 +57,25 @@ def opx_color_cell(cell, rgb='00FF0000', pattern_type='solid', negative_rgb=None
         cell.fill = this_fill
     return apply_color
 
+def opx_color_rows(worksheet, fn_cell_rgb, context=None, pattern_type='solid'):
+    """openpyxl helper: Set cell color for each rows.
+    
+    Arguments:
+        worksheet: The worksheet to run through.
+        fn_cell_rgb: Function to determine which column in the row to have what cell color.
+            `fn_cell_rgb(worksheet, row:int, num_of_columns, context=context): list(list())`
+            supposed to return 2D array. TODO explain more.
+        pattern_type: Cell filling pattern.
+    """
+    n_col = worksheet.max_column
+    n_row = worksheet.max_row
+    for r in range(n_row):
+        col_rgbs = fn_cell_rgb(worksheet, r, n_col, context=context)
+        for c, rgb in col_rgbs:
+            this_color = opx.styles.colors.Color(rgb=rgb)
+            this_fill = opx.styles.fills.PatternFill(patternType=pattern_type, fgColor=this_color)
+            worksheet.cell(column=c+1, row=r+1).fill = this_fill
+
 def opx_copy_cell_style(source_cell, target_cell):
     """openpyxl helper: Copy cell style only from source to target.
     """
