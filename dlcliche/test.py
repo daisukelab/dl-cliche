@@ -22,10 +22,13 @@ def recursive_test_array(cls, a, b, msg=None, fn=None):
         fn(a, b, msg=msg)
 
 def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
-    """Test that two pandas DataFrames are the same.
-    And shows where differences are.
+    """Test that two pandas DataFrames are the same, and print result.
+    If there's anything different, differences will be shown.
 
     Arguments:
+        title: Title text to print right before result.
+        df1: One DataFrame to compare.
+        df2: Another DataFrame.
         fillna: Fill N/A beforehand or not. Note that N/A is always False when compared.
         filler: Valid if fillna=True, filling value to feed to pandas fillna().
     """
@@ -48,3 +51,26 @@ def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
 @deprecated
 def test_exactly_the_same_df(title, df1, df2, fillna=True, filler=0):
     return test_exactly_same_df(title, df1, df2, fillna=fillna, filler=filler)
+
+
+def test_exactly_same_excel(title, excel1, excel2, fillna=True, filler=0):
+    """Test that two Excel books are the same and print result.
+    If there's anything different, differences will be shown.
+
+    Arguments:
+        title: Title text to print right before result.
+        excel1: One Excel book to compare.
+        excel2: Another Excel book.
+        fillna: Fill N/A beforehand or not. Note that N/A is always False when compared.
+        filler: Valid if fillna=True, filling value to feed to pandas fillna().
+    """
+    dfs1 = df_load_excel_like(excel1, sheetname=None)
+    dfs2 = df_load_excel_like(excel2, sheetname=None)
+    results = []
+    for k1, k2 in zip(dfs1, dfs2):
+        df1 = dfs1[k1]
+        df2 = dfs2[k2]
+        results.append(test_exactly_same_df(f'{k1} vs {k2} ?', df1, df2, fillna=fillna, filler=filler))
+    single_result = np.all(results)
+    print(f'{title} {"Passed" if single_result else "Failed"}')
+    return single_result
