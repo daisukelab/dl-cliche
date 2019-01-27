@@ -107,7 +107,9 @@ def subplot_matrix(rows, columns, figsize=(12, 12)):
     ```
     """
     fig, axes = plt.subplots(rows, columns, figsize=figsize)
-    return list(axes.flat)
+    return list(axes.flat) if 1 < rows*columns else [axes]
+
+
 def show_np_image(img, figsize=None, ax=None):
     """Show numpy object image with figsize on axes of subplot.
     Using this with subplot_matrix() will make it easy to plot matrix of images.

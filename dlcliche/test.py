@@ -37,7 +37,7 @@ def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
     try:
         if len(df1) != len(df2):
             raise Exception('DataFrames have different lengths. %d != %d' % (len(df1), len(df2)))
-        if not np.all(df1.columns == df2.columns):
+        if len(df1.columns) != len(df2.columns) or not np.all(df1.columns == df2.columns):
             raise Exception('DataFrames have different columns. {} vs. {}'.format(df1.columns, df2.columns))
         result = df1.equals(df2)#np.all(np.all(df1 == df2)) # np.all for rows, and cols -> final answer
         if not result:

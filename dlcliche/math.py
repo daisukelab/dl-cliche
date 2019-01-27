@@ -1,10 +1,26 @@
 import math
 import numpy as np
+import pandas as pd
 
 
 def roundup(x, n=10):
     """Round up x to multiple of n."""
     return int(math.ceil(x / n)) * n
+
+
+def running_mean(x, N):
+    """Calculate running/rolling mean or moving average.
+    Thanks to https://stackoverflow.com/a/27681394/6528729
+    """
+    cumsum = np.cumsum(np.insert(x, 0, 0)) 
+    return (cumsum[N:] - cumsum[:-N]) / float(N)
+
+
+def np_describe(arr):
+    """Describe numpy array statistics.
+    Thanks to https://qiita.com/AnchorBlues/items/051dc69e81705b52adad
+    """
+    return pd.DataFrame(pd.Series(arr.ravel()).describe()).transpose()
 
 
 def np_softmax(x):
@@ -14,7 +30,7 @@ def np_softmax(x):
 
 class OnlineStats:
     """Calculate mean/variance of a vector online
-    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+    Thanks to https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
     """
 
     def __init__(self, length):
