@@ -120,10 +120,11 @@ def opx_duplicate_style(sh, row_src, row_dest, n_row=None, debug=False):
             opx_copy_cell_style(sh.cell(column=c+1, row=row_src+1), sh.cell(column=c+1, row=r+1))
 
 opx_ILLEGAL_CHARACTERS_RE = re.compile(
-    r'[\000-\010]|[\013-\014]|[\016-\037]|[\x00-\x1f\x7f-\x9f]|[\uffff]')
+    r'[\000-\010]|[\013-\014]|[\016-\037]|[\x7f-\x9f]|[\uffff]')
 def opx_remove_illegal_char(data):
     """Remove ILLEGAL CHARACTERS.
     Thanks to https://qiita.com/analytics-hiro/items/e6581019a11de798002b
+    but fixed problem to remove new lines... Removed: `\x00-\x1f`.
     """
     if isinstance(data, str):
         return opx_ILLEGAL_CHARACTERS_RE.sub("", data)
