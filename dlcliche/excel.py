@@ -300,6 +300,6 @@ def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
     ws_name = ws_name or stem_name
     wb = df_to_excel_workbook(df, wb=None, template=template, max_col_width=max_col_width,
                               ws_name=ws_name, index_filter=index_filter,
-                              view_left_col=view_left_col)
+                              view_left_col=view_left_col, copy_style=(template is not None))
     wb.save(pathname)
     return pathname

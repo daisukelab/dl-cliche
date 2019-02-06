@@ -14,4 +14,13 @@ else:
     # cannot even get ipython object...
     running_in_notebook = False
 
+
+def fit_notebook_to_window():
+    """Fit notebook width to width of browser window.
+    Thanks to https://stackoverflow.com/questions/21971449/how-do-i-increase-the-cell-width-of-the-jupyter-ipython-notebook-in-my-browser
+    """
+    from IPython.core.display import display, HTML
+    display(HTML("<style>.container { width:100% !important; }</style>"))
+
+
 # Didn't work -> https://stackoverflow.com/questions/32906669/how-to-use-ipython-magic-within-a-script-to-auto-reload-modules
