@@ -153,6 +153,27 @@ def str_to_date(text):
         temp_dt = datetime.datetime.strptime(text, '%Y-%m-%d')
     return datetime.date(temp_dt.year, temp_dt.month, temp_dt.day)
 
+def get_week_start_end_dates(week_no:int, year=None) -> [datetime.datetime, datetime.datetime]:
+    """Get start and end date of an ISO calendar week.
+    ISO week starts on Monday, and ends on Sunday.
+    
+    Arguments:
+        week_no: ISO calendar week number
+        year: Year to calculate, None will set this year
+
+    Returns:
+        [start_date:datetime, end_date:datetime]
+    """
+    if not year:
+        year, this_week, this_day = datetime.datetime.today().isocalendar()
+    start_date = datetime.datetime.strptime(f'{year}-W{week_no:02d}-1', "%G-W%V-%u").date()
+    end_date = datetime.datetime.strptime(f'{year}-W{week_no:02d}-7', "%G-W%V-%u").date()
+    return [start_date, end_date]
+
+def get_this_week_no():
+    """Get ISO calendar week no of today."""
+    return datetime.datetime.today().isocalendar()[1]
+
 ## List utilities
 
 def write_text_list(textfile, a_list):
