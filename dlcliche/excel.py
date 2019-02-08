@@ -21,6 +21,36 @@ def opx_copy_cell(source_cell, target_cell, style_copy=False):
     if source_cell.comment:
         target_cell.comment = copy(source_cell.comment)
 
+
+def opx_copy_cells(src_sh, src_pos, dest_sh, dest_pos, row_step=1, col_step=0, stop_if_empty=True, style_copy=False):
+    """Copy cells between sheets sequentially.
+
+    Arguments:
+        src_sh: Source sheet
+        src_pos: Source position (column, row)
+        dest_sh: Destination sheet
+        dest_pos: Destination position
+        row_step: Row step to move copy position; 2 will copy like this: B2, B4, ...
+        col_step: Column step; 2 will work like this: B2, D2, ...
+        stop_if_empty: Stop copying if source cell is empty, i.e. str(cell) == ''
+        style_copy: Copy cell style or not
+    """
+    src, dst = src_sh, dest_sh
+    src_col, src_row = src_pos
+    dst_col, dst_row = dest_pos
+    while True:
+        opx_copy_cell(src.cell(column=src_col+1, row=src_row+1),
+                      dst.cell(column=dst_col+1, row=dst_row+1),
+                      style_copy=style_copy)
+        src_col += col_step
+        dst_col += col_step
+        src_row += row_step
+        dst_row += row_step
+        if src.max_column <= src_col: break
+        if src.max_row    <= src_row: break
+        if stop_if_empty and str(src.cell(column=src_col+1, row=src_row+1)) == '': break
+
+
 def opx_color_cell(cell, rgb='00FF0000', pattern_type='solid', negative_rgb=None, keywords=None):
     """openpyxl helper: Set cell color and its pattern.
     If keywords are listed, apply only when any keyword is in value string,
