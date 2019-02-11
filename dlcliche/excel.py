@@ -149,6 +149,31 @@ def opx_duplicate_style(sh, row_src, row_dest, n_row=None, debug=False):
         for c in range(n_col):
             opx_copy_cell_style(sh.cell(column=c+1, row=row_src+1), sh.cell(column=c+1, row=r+1))
 
+def opx_reorder_sheets(wb, name_list):
+    """Reorder worksheets of workbook object.
+    Thanks to https://stackoverflow.com/questions/51082458/move-a-worksheet-in-a-workbook-using-openpyxl-or-xl-or-xlsxwriter
+    """
+    names = wb.sheetnames.copy()
+    assert set(names) == set(name_list)
+    new_order = [names.index(s) for s in name_list]
+    wb._sheets = [wb._sheets[o] for o in new_order]
+
+def opx_set_active_by_name(wb, sheetname):
+    """Set worksheet of workbook active by name."""
+    wb.active = wb.sheetnames.index(sheetname)
+
+def opx_drop_all_except_active_sheet(wb, keep=[]):
+    """Drop all worksheets except active one.
+    
+    Arguments:
+        keep: List of exception sheetnames. All sheets on this list will not be dropped.
+    """
+    sheet_to_keep = [wb.active.title] + keep
+    for sh in wb.sheetnames:
+        if sh not in sheet_to_keep:
+            del wb[sh]
+    wb.active = 0
+
 opx_ILLEGAL_CHARACTERS_RE = re.compile(
     r'[\000-\010]|[\013-\014]|[\016-\037]|[\x7f-\x9f]|[\uffff]')
 def opx_remove_illegal_char(data):
@@ -188,7 +213,8 @@ def opx_df_to_ws(workbook, sheetname, df, start_row=1, start_col=1, index=True, 
     n_row, n_col = 0, 0
     if header:
         ws.cell(row=start_row, column=start_col, value=df.index.name)
-        for ci, value in enumerate(df.columns, start_col+1):
+        header_start_col = start_col+1 if index else start_col
+        for ci, value in enumerate(df.columns, header_start_col):
             ws.cell(row=start_row, column=ci, value=opx_remove_illegal_char(value))
         start_row += 1
         n_row += 1
@@ -256,10 +282,10 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
     column_widths = []
     for row in worksheet.iter_rows():
         for i, cell in enumerate(row):
-            try:
+            if len(column_widths) <= i:
+                column_widths.append(default_width)
+            if cell.TYPE_FORMULA != cell.data_type:
                 column_widths[i] = max(column_widths[i], unicode_visible_width(str(cell.value)))
-            except IndexError:
-                column_widths.append(unicode_visible_width(str(cell.value)))
 
     for i, column_width in enumerate(column_widths):
         if dont_narrower:
