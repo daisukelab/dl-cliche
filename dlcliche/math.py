@@ -23,9 +23,17 @@ def np_describe(arr):
     return pd.DataFrame(pd.Series(arr.ravel()).describe()).transpose()
 
 
-def np_softmax(x):
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=0)
+def np_softmax(z):
+    """Numpy version softmax.
+    Thanjs to https://stackoverflow.com/a/39558290/6528729
+    """
+    assert len(z.shape) == 2
+    s = np.max(z, axis=1)
+    s = s[:, np.newaxis] # necessary step to do broadcasting
+    e_x = np.exp(z - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis] # dito
+    return e_x / div
 
 
 class OnlineStats:
