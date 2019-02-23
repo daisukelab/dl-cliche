@@ -36,6 +36,40 @@ def np_softmax(z):
     return e_x / div
 
 
+def geometric_mean_preds(list_preds):
+    """Calculate geometric mean of prediction results.
+    Prediction result is expected to be probability value of ML model's
+    softmax outputs in 2d array.
+
+    Arguments:
+        list_preds: List of 2d numpy array prediction results.
+
+    Returns:
+        Geometric mean of input list of 2d numpy arrays.
+    """
+    preds = list_preds[0].copy()
+    for next_preds in list_preds[1:]:
+        preds = np.multiply(preds, next_preds)
+    return np.power(preds, 1/len(list_preds))
+
+
+def arithmetic_mean_preds(list_preds):
+    """Calculate arithmetic mean of prediction results.
+    Prediction result is expected to be probability value of ML model's
+    softmax outputs in 2d array.
+
+    Arguments:
+        list_preds: List of 2d numpy array prediction results.
+
+    Returns:
+        Arithmetic mean of input list of 2d numpy arrays.
+    """
+    preds = list_preds[0].copy()
+    for next_preds in list_preds[1:]:
+        preds = np.add(preds, next_preds)
+    return preds / len(list_preds)
+
+
 class OnlineStats:
     """Calculate mean/variance of a vector online
     Thanks to https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
