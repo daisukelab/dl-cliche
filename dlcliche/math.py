@@ -112,3 +112,10 @@ class OnlineStats:
 
     def count(self):
         return self.n
+
+    def set_mean(self, mean_values):
+        """Set mean value as if onle one sample was fed."""
+        self.K = 0.0
+        self.Ex = mean_values
+        self.Ex2 = 0.0
+        self.n = 1
