@@ -34,10 +34,14 @@ def opx_copy_cells(src_sh, src_pos, dest_sh, dest_pos, row_step=1, col_step=0, s
         col_step: Column step; 2 will work like this: B2, D2, ...
         stop_if_empty: Stop copying if source cell is empty, i.e. str(cell) == ''
         style_copy: Copy cell style or not
+
+    Returns:
+        Number of cells copied.
     """
     src, dst = src_sh, dest_sh
     src_col, src_row = src_pos
     dst_col, dst_row = dest_pos
+    count = 0
     while True:
         opx_copy_cell(src.cell(column=src_col+1, row=src_row+1),
                       dst.cell(column=dst_col+1, row=dst_row+1),
@@ -46,9 +50,11 @@ def opx_copy_cells(src_sh, src_pos, dest_sh, dest_pos, row_step=1, col_step=0, s
         dst_col += col_step
         src_row += row_step
         dst_row += row_step
+        count += 1
         if src.max_column <= src_col: break
         if src.max_row    <= src_row: break
         if stop_if_empty and str(src.cell(column=src_col+1, row=src_row+1)) == '': break
+    return count
 
 
 def opx_color_cell(cell, rgb='00FF0000', pattern_type='solid', negative_rgb=None, keywords=None):
