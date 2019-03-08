@@ -226,6 +226,11 @@ def opx_df_to_ws(workbook, sheetname, df, start_row=1, start_col=1, index=True, 
         n_row += 1
     # Write all data into the sheet
     for ri, row in enumerate(dataframe_to_rows(df, index=index, header=False), start_row):
+        if header and index: # index header appears twice, This happens only when header && index.
+            if ri == start_row:
+                continue
+            else:
+                ri -= 1
         for ci, value in enumerate(row, start_col):
             if index_filter is not None and ci == start_col:
                 value = index_filter(value)
