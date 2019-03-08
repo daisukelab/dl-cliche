@@ -191,6 +191,16 @@ from itertools import chain
 def flatten_list(lists):
     return list(chain.from_iterable(lists))
 
+def is_array_like(item):
+    """Check if item is an array-like object."""
+    return isinstance(item, (list, set, tuple, np.ndarray))
+
+def is_flat_array(array):
+    """Check if array doesn't have array-like object."""
+    for item in array:
+        if is_array_like(item): return False
+    return True
+
 # Thanks to https://stackoverflow.com/questions/3844801/check-if-all-elements-in-a-list-are-identical
 def all_elements_are_identical(iterator):
     """Check all elements in iterable like list are identical."""
@@ -287,6 +297,33 @@ def df_select_by_keywords(source_df, keys_cols, and_or='or', as_mask=False):
     if as_mask:
         return mask
     return source_df.loc[mask]
+
+def df_mask_by_str_or_list(df, column, keys):
+    """Find str match and make mask of dataframe.
+    If multiple keys are fed, mask will be AND-calculated among keys.
+    """
+    mask = None
+    if type(keys) == str: keys = [keys]
+    for key in keys:
+        this_mask = df[column].str.find(key) >= 0
+        mask = this_mask if mask is None else (mask & this_mask)
+    return mask
+
+def df_mask_by_str_conditions(df, conditions):
+    """Find dataframe rows that matches condition of str search.
+    Returns:
+        Aggregated mask from masks calculated from sub conditions recursively.
+    """
+    col_or_op, key_or_conds = conditions
+    if is_array_like(key_or_conds):
+        if col_or_op not in ['and', 'or']:
+            raise Exception(f'unknown condition: {col_or_op}')
+        masks = [df_mask_by_str_conditions(df, sub_conds) for sub_conds in key_or_conds]
+        mask = np.column_stack(masks).any(axis=1) if col_or_op == 'or' else \
+               np.column_stack(masks).all(axis=1)
+        return mask
+    else:
+        return df_mask_by_str_or_list(df, col_or_op, key_or_conds)
 
 def df_str_replace(df, from_strs, to_str):
     """Apply str.replace to entire DataFrame inplace."""
