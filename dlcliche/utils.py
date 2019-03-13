@@ -248,23 +248,31 @@ def df_to_csv_excel_friendly(df, filename, **args):
     """df.to_csv() to be excel friendly UTF-8 handling."""
     df.to_csv(filename, encoding='utf_8_sig', **args)
 
-def df_merge_update(df_list_or_org_file, opt_joining_file=None):
-    """Merge data frames while update duplicated index with following (joining) row.
+def df_merge_update(df_list):
+    """Merge data frames while update duplicated index with followed row.
     
     Usages:
-        - df_merge_update([df1, df2, ...]) merges dfs in list.
-        - df_merge_update(df1, df2) merges df1 and df2.
+        - df_merge_update([df1, df2, ...]) merges dataframes on the list.
     """
-    if opt_joining_file is not None:
-        df_list = [df_list_or_org_file, opt_joining_file]
-    else:
-        df_list = df_list_or_org_file
-
     master = df_list[0]
     for df in df_list[1:]:
         tmp_df = pd.concat([master, df])
         master = tmp_df[~tmp_df.index.duplicated(keep='last')].sort_index()
     return master
+
+from functools import reduce
+def df_merge_simply(dataframes):
+    """Merge list of data frames into single data frame.
+    All data frames are supposed to have the same columns.
+    Thanks to https://stackoverflow.com/questions/44327999/python-pandas-merge-multiple-dataframes/44338256
+    """
+    # Check that all columns are the same
+    df0 = dataframes[0]
+    for df in dataframes[1:]:
+        assert np.all(df0.columns == df.columns)
+    # Merge all
+    df_merged = reduce(lambda left,right: pd.merge(left, right, how='outer'), dataframes)
+    return df_merged
 
 def df_select_by_keyword(source_df, keyword, search_columns=None, as_mask=False):
     """Select data frame rows by a search keyword.

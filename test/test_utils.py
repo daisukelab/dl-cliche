@@ -130,7 +130,7 @@ class TestUtils(unittest.TestCase):
         df = pd.DataFrame({'idx': [3, 4, 6, 7], 'data': [110, 111, 112, 113]})
         df = df.set_index('idx')
 
-        agg_df = df_merge_update(agg_df, df)
+        agg_df = df_merge_update([agg_df, df])
         reference_df = pd.DataFrame({'data': [100, 101, 110, 111, 104, 112, 113], 'idx': [1, 2, 3, 4, 5, 6, 7]})
         reference_df = reference_df.set_index('idx')
         self.assertTrue(agg_df.equals(reference_df))
