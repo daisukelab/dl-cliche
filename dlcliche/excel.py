@@ -305,7 +305,8 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
 
 MAX_EXCEL_COL_WIDTH = 20
 def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name='untitled',
-                         index_filter=None, view_left_col=None, copy_style=True):
+                         index=True, header=True, index_filter=None,
+                         view_left_col=None, copy_style=True):
     """Write df to Excel workbook object.
     Refer to df_to_xlsx for the detail.
     """
@@ -318,7 +319,7 @@ def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name
     if use_active_sheet:
         wb.active.title = ws_name
     # Set contents
-    opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index_filter=index_filter)
+    opx_df_to_ws(wb, ws_name, df=df, start_row=1, start_col=1, index=index, header=header, index_filter=index_filter)
     if copy_style:
         opx_duplicate_style(wb[ws_name], row_src=2, row_dest=3,
                         n_row=len(df)-3+1, debug=False)
@@ -340,7 +341,7 @@ def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name
     return wb
 
 def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
-               ws_name=None, index_filter=None, view_left_col=None):
+               ws_name=None, index=True, header=True, index_filter=None, view_left_col=None):
     """Write df to Excel .xlsx file.
     Column width will be adjusted to fit the contents.
     Active cell will be set to the top column of last row.
@@ -361,7 +362,7 @@ def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
     pathname = (Path(folder)/stem_name).with_suffix('.xlsx')
     ws_name = ws_name or stem_name
     wb = df_to_excel_workbook(df, wb=None, template=template, max_col_width=max_col_width,
-                              ws_name=ws_name, index_filter=index_filter,
+                              ws_name=ws_name, index=index, header=header, index_filter=index_filter,
                               view_left_col=view_left_col, copy_style=(template is not None))
     wb.save(pathname)
     return pathname

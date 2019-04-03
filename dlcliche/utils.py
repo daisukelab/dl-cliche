@@ -9,6 +9,7 @@ from easydict import EasyDict
 from tqdm import tqdm_notebook
 import shutil
 import datetime
+import pickle
 
 ## File utilities
 
@@ -89,6 +90,18 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
             if _done: break
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
+
+def save_as_pkl_binary(obj, filename):
+    """Save object as pickle binary file.
+    Thanks to https://stackoverflow.com/questions/19201290/how-to-save-a-dictionary-to-a-file/32216025
+    """
+    with open(filename, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_pkl(filename):
+    """Load pickle object from file."""
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
 
 ## Log utilities
 
