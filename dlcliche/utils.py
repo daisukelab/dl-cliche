@@ -10,6 +10,9 @@ from tqdm import tqdm_notebook
 import shutil
 import datetime
 import pickle
+from collections import Counter
+import random
+
 
 ## File utilities
 
@@ -459,6 +462,36 @@ def df_balance_class_by_under_sampling(df, label_column, random_state=42):
     """Balance class distribution in DataFrame with imbalanced-learn RandomUnderSampler."""
     X, y = list(range(len(df))), list(df[label_column])
     X, _ = balance_class_by_under_sampling(X, y, random_state=random_state)
+    return df.iloc[X].sort_index()
+
+def balance_class_by_limited_over_sampling(X, y, max_sample_per_class=None, multiply_limit=2., random_state=42):
+    """Balance class distribution basically by oversampling but limited duplication.
+
+    # Arguments
+        X: Data samples, only size of samples is used here.
+        y: Class labels to be balanced.
+        max_sample_per_class: Number of maximum samples per class, large class will be limitd to this number.
+        multiply_limit: Small size class samples will be duplicated, but limited to multiple of this number.
+    """
+    assert len(X) == len(y), f'Length of X({len(X)}) and y({len(y)}) is different, supposed to be the same.'
+    y_count = Counter(y)
+    max_sample_per_class = max_sample_per_class or np.max(list(y_count.values()))
+    resampled_idxes = []
+    random.seed(random_state)
+    for cur_y, count in y_count.items():
+        this_samples = np.min([multiply_limit * count, max_sample_per_class]).astype(int)
+        idxes = np.where(y == cur_y)[0]
+        idxes = random.choices(idxes, k=this_samples)
+        resampled_idxes += list(idxes)
+    return X[resampled_idxes], y[resampled_idxes]
+
+def df_balance_class_by_limited_over_sampling(df, label_column,
+                                              max_sample_per_class=None, multiply_limit=2.,
+                                              random_state=42):
+    """Balance class distribution in DataFrame with balance_class_by_limited_over_sampling."""
+    X, y = list(range(len(df))), list(df[label_column])
+    X, _ = balance_class_by_limited_over_sampling(X, y, max_sample_per_class=max_sample_per_class,
+                                                  multiply_limit=multiply_limit, random_state=random_state)
     return df.iloc[X].sort_index()
 
 ## Visualization utilities
