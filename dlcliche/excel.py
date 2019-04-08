@@ -378,13 +378,16 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
                 column_widths[i] = max(column_widths[i], unicode_visible_width(str(cell.value)))
 
     for i, column_width in enumerate(column_widths):
-        if dont_narrower:
-            # https://groups.google.com/forum/#!topic/openpyxl-users/ROYUQyH50ro
-            cur_width = worksheet.column_dimensions[get_column_letter(i + 1)].width
-            if cur_width is None: cur_width = default_width
-            column_width = cur_width if column_width < cur_width else column_width
+        # https://groups.google.com/forum/#!topic/openpyxl-users/ROYUQyH50ro
+        cur_width = worksheet.column_dimensions[get_column_letter(i + 1)].width
+        if cur_width is None: cur_width = default_width
+
         if max_width is not None:
             column_width = max_width if max_width < column_width else column_width
+
+        if dont_narrower:
+            column_width = cur_width if column_width < cur_width else column_width
+
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
 
 
