@@ -1,9 +1,11 @@
 from dlcliche.utils import *
 import openpyxl as opx
+from openpyxl.worksheet import Worksheet
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
 from copy import copy
 import re
+
 
 def opx_copy_cell(source_cell, target_cell, style_copy=False):
     """openpyxl helper: Copy cell from source to target.
@@ -57,6 +59,69 @@ def opx_copy_cells(src_sh, src_pos, dest_sh, dest_pos, row_step=1, col_step=0, s
     return count
 
 
+class _ForcedWorksheetCopy(object):
+    """
+    Custom made copier.
+    Thanks to https://bitbucket.org/openpyxl/openpyxl/src/d090796b358b0238cce5e9c71fa2dd1ccc37ccbc/openpyxl/worksheet/copier.py?at=default&fileviewer=file-view-default
+    """
+
+    def __init__(self, source_worksheet, target_worksheet):
+        self.source = source_worksheet
+        self.target = target_worksheet
+        self._verify_resources()
+
+    def _verify_resources(self):
+
+        if (not isinstance(self.source, Worksheet)
+            and not isinstance(self.target, Worksheet)):
+            raise TypeError("Can only copy worksheets")
+
+        if self.source is self.target:
+            raise ValueError("Cannot copy a worksheet to itself")
+
+        # Enabled this --> if self.source.parent != self.target.parent:
+        #    raise ValueError('Cannot copy between worksheets from different workbooks')
+
+    def copy_worksheet(self):
+        self._copy_cells()
+        self._copy_dimensions()
+
+        self.target.sheet_format = copy(self.source.sheet_format)
+        self.target.sheet_properties = copy(self.source.sheet_properties)
+        self.target.merged_cells = copy(self.source.merged_cells)
+
+    def _copy_cells(self):
+        for (row, col), source_cell  in self.source._cells.items():
+            target_cell = self.target.cell(column=col, row=row)
+
+            target_cell._value = source_cell._value
+            target_cell.data_type = source_cell.data_type
+
+            if source_cell.has_style:
+                opx_copy_cell_style(source_cell, target_cell,
+                                    between_wb=(self.source.parent != self.target.parent))
+
+            if source_cell.hyperlink:
+                target_cell._hyperlink = copy(source_cell.hyperlink)
+
+            if source_cell.comment:
+                target_cell.comment = copy(source_cell.comment)
+
+    def _copy_dimensions(self):
+        for attr in ('row_dimensions', 'column_dimensions'):
+            src = getattr(self.source, attr)
+            target = getattr(self.target, attr)
+            for key, dim in src.items():
+                target[key] = copy(dim)
+                target[key].worksheet = self.target
+
+
+def opx_copy_worksheet(source_worksheet, target_worksheet):
+    """Copy worksheet even in between workbooks."""
+    copier = _ForcedWorksheetCopy(source_worksheet=source_worksheet, target_worksheet=target_worksheet)
+    copier.copy_worksheet()
+
+
 def opx_color_cell(cell, rgb='00FF0000', pattern_type='solid', negative_rgb=None, keywords=None):
     """openpyxl helper: Set cell color and its pattern.
     If keywords are listed, apply only when any keyword is in value string,
@@ -93,6 +158,7 @@ def opx_color_cell(cell, rgb='00FF0000', pattern_type='solid', negative_rgb=None
         cell.fill = this_fill
     return apply_color
 
+
 def opx_color_rows(worksheet, fn_cell_rgb, context=None, pattern_type='solid'):
     """openpyxl helper: Set cell color for each rows.
     
@@ -112,10 +178,21 @@ def opx_color_rows(worksheet, fn_cell_rgb, context=None, pattern_type='solid'):
             this_fill = opx.styles.fills.PatternFill(patternType=pattern_type, fgColor=this_color)
             worksheet.cell(column=c+1, row=r+1).fill = this_fill
 
-def opx_copy_cell_style(source_cell, target_cell):
+def opx_copy_cell_style(source_cell, target_cell, between_wb=False):
     """openpyxl helper: Copy cell style only from source to target.
+    Thanks to https://stackoverflow.com/questions/23332259/copy-cell-style-openpyxl
     """
-    target_cell._style = copy(source_cell._style)
+    if between_wb:
+        target_cell.font = copy(source_cell.font)
+        target_cell.border = copy(source_cell.border)
+        target_cell.fill = copy(source_cell.fill)
+        target_cell.number_format = copy(source_cell.number_format)
+        target_cell.protection = copy(source_cell.protection)
+        target_cell.alignment = copy(source_cell.alignment)
+    else:
+        # Much faster and reliable
+        target_cell._style = copy(source_cell._style)
+
 
 def opx_copy_row(sh_src, row_src, sh_dest, row_dest, n_col=None, style_copy=False, debug=False):
     """openpyxl helper: Copy row.
@@ -136,6 +213,7 @@ def opx_copy_row(sh_src, row_src, sh_dest, row_dest, n_col=None, style_copy=Fals
         opx_copy_cell(sh_src.cell(column=c+1, row=row_src+1), sh_dest.cell(column=c+1, row=row_dest+1),
                      style_copy=style_copy)
 
+
 def opx_duplicate_style(sh, row_src, row_dest, n_row=None, debug=False):
     """openpyxl helper: Copy style among rows.
 
@@ -155,6 +233,7 @@ def opx_duplicate_style(sh, row_src, row_dest, n_row=None, debug=False):
         for c in range(n_col):
             opx_copy_cell_style(sh.cell(column=c+1, row=row_src+1), sh.cell(column=c+1, row=r+1))
 
+
 def opx_reorder_sheets(wb, name_list):
     """Reorder worksheets of workbook object.
     Thanks to https://stackoverflow.com/questions/51082458/move-a-worksheet-in-a-workbook-using-openpyxl-or-xl-or-xlsxwriter
@@ -164,9 +243,11 @@ def opx_reorder_sheets(wb, name_list):
     new_order = [names.index(s) for s in name_list]
     wb._sheets = [wb._sheets[o] for o in new_order]
 
+
 def opx_set_active_by_name(wb, sheetname):
     """Set worksheet of workbook active by name."""
     wb.active = wb.sheetnames.index(sheetname)
+
 
 def opx_drop_all_except_active_sheet(wb, keep=[]):
     """Drop all worksheets except active one.
@@ -180,6 +261,7 @@ def opx_drop_all_except_active_sheet(wb, keep=[]):
             del wb[sh]
     wb.active = 0
 
+
 opx_ILLEGAL_CHARACTERS_RE = re.compile(
     r'[\000-\010]|[\013-\014]|[\016-\037]|[\x7f-\x9f]|[\uffff]')
 def opx_remove_illegal_char(data):
@@ -191,6 +273,7 @@ def opx_remove_illegal_char(data):
         return opx_ILLEGAL_CHARACTERS_RE.sub("", data)
     else:
         return data
+
 
 def opx_df_to_ws(workbook, sheetname, df, start_row=1, start_col=1, index=True, header=True, index_filter=None):
     """Write all data in a DataFrame to Excel worksheet.
@@ -239,7 +322,7 @@ def opx_df_to_ws(workbook, sheetname, df, start_row=1, start_col=1, index=True, 
         if n_row < ri: n_row = ri
     return n_row, n_col
 
-from openpyxl.utils import get_column_letter
+
 def opx_bar_chart(dest_ws, RC, src_ws, TL, BR, figtitle='', xtitle='', ytitle='', figsize=None):
     """Draw bar chart of source data placed in a rectangle area.
     Leftmost column is index (= category).
@@ -275,6 +358,7 @@ def opx_bar_chart(dest_ws, RC, src_ws, TL, BR, figtitle='', xtitle='', ytitle=''
     anchor = get_column_letter(RC[1]) + str(RC[0])
     dest_ws.add_chart(chart, anchor)
 
+
 def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scaling=1.1, dont_narrower=False):
     """Auto adjust all column width in a worksheet.
     
@@ -302,6 +386,7 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         if max_width is not None:
             column_width = max_width if max_width < column_width else column_width
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
+
 
 MAX_EXCEL_COL_WIDTH = 20
 def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name='untitled',
@@ -339,6 +424,7 @@ def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name
         wb[ws_name].sheet_view.pane.topLeftCell = f'{view_left_col}{int(np.max([len(df)-3, 2]))}'
 
     return wb
+
 
 def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
                ws_name=None, index=True, header=True, index_filter=None, view_left_col=None):
