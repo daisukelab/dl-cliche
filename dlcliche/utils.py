@@ -481,7 +481,10 @@ def balance_class_by_limited_over_sampling(X, y, max_sample_per_class=None, mult
     for cur_y, count in y_count.items():
         this_samples = np.min([multiply_limit * count, max_sample_per_class]).astype(int)
         idxes = np.where(y == cur_y)[0]
-        idxes = random.choices(idxes, k=this_samples)
+        # Add all class samples first
+        resampled_idxes += list(idxes)
+        # Add oversampled
+        idxes = random.choices(idxes, k=this_samples-len(idxes))
         resampled_idxes += list(idxes)
     return X[resampled_idxes], y[resampled_idxes]
 
