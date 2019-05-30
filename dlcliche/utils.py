@@ -610,6 +610,12 @@ def plt_looks_good():
     plt.rcParams['xtick.labelsize'] = 10
     plt.rcParams['ytick.labelsize'] = 10
 
+def pd_display_more(max_cols=100, max_rows=500):
+    """Set max cols/rows of pandas display."""
+    pd.options.display.max_columns = max_cols
+    pd.options.display.max_rows = max_rows
+
+
 # Thanks to http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
 import itertools
 from sklearn.metrics import confusion_matrix
