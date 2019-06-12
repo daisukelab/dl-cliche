@@ -190,6 +190,16 @@ def get_this_week_no():
     """Get ISO calendar week no of today."""
     return datetime.datetime.today().isocalendar()[1]
 
+def daterange(start_date, end_date):
+    """Yield date from start_date until the day before end_date.
+    Note that end_date is NOT inclusive.
+
+    Thanks to https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
+    """
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + datetime.timedelta(n)
+
+
 ## List utilities
 
 def write_text_list(textfile, a_list):
