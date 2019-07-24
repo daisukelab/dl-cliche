@@ -200,6 +200,26 @@ def daterange(start_date, end_date, inclusive=False):
     for n in range(days):
         yield start_date + datetime.timedelta(n)
 
+def add_days_to_date(one_date, days, not_exceed='today'):
+    """Add number of days to one_date that doesn't exceed not_exceed.
+
+    Arguments:
+        one_date: datetime.datetime date to add days.
+        days: Adding number of days, int.
+        not_exceed:
+            - datetime.datetime date if limiting resulting date,
+            - None if nothing to limit,
+            - 'today' if limiting to today.
+
+    Returns:
+        datetime.datetime date.
+    """
+    added = one_date + datetime.timedelta(days)
+    not_exceed = datetime.datetime.today().date() if not_exceed == 'today' else not_exceed
+    if not_exceed is not None and not_exceed < added:
+        added = not_exceed
+    return added
+
 
 ## List utilities
 

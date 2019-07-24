@@ -1,6 +1,9 @@
 from dlcliche.utils import *
 import openpyxl as opx
-from openpyxl.worksheet import Worksheet
+try:
+    from openpyxl.worksheet import Worksheet
+except:
+    from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
 from copy import copy
