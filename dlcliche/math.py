@@ -36,6 +36,32 @@ def np_softmax(z):
     return e_x / div
 
 
+def n_by_m_distances(n, m, how='cosine'):
+    """
+    Calculate distances for all combinations of vectors.
+
+    Example:
+        n = np.array([[0.1, 0.2], [0.7, 0.5], [0.3, 0.4]])
+        m = np.array([[-20, 10], [10, 20], [10, 10], [20, 10]])
+        n_by_m_distances(n, m, how='euclidean')
+        Result:
+            [[22.361798, 22.137073, 13.930183, 22.1822  ],
+             [22.775864, 21.604166, 13.29436 , 21.511392],
+             [22.455512, 21.868928, 13.647344, 21.914607]]
+    """
+    if how == 'cosine':
+        l2_n = np.linalg.norm(n, axis=1)
+        l2_m = np.linalg.norm(m, axis=1)
+        inner = np.dot(n, m.T)
+        norms = np.dot(l2_n.reshape(-1, 1), l2_m.reshape(1, -1))
+        return inner / norms
+    elif how == 'euclidean':
+        # Thanks to https://stackoverflow.com/questions/32154475/einsum-and-distance-calculations
+        return np.sqrt(np.einsum('ijk->ij',(n[:,None,:] - m)**2))
+    else:
+        raise Exception(f'Unknown how: {how}')
+
+
 def geometric_mean_preds(list_preds):
     """Calculate geometric mean of prediction results.
     Prediction result is expected to be probability value of ML model's

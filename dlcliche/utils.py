@@ -94,6 +94,28 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
 
+def subsample_files_in_tree(root, filename_pattern, size):
+    """
+    Sub-sample file names under root folder.
+
+    Arguments:
+        root: Root folder to search files from.
+        filename_pattern: Wildcard pattern like: '*.png'.
+        size: (0, 1) size to sub-sample: 0.5 for 50%.
+
+    Returns:
+        List of sub-sampled files.
+    """
+    files = []
+    folders = [f for f in root.glob('**') if f.is_dir()]
+    print(root, folders)
+    for folder in folders:
+        candidates = [str(f) for f in folder.glob(filename_pattern)]
+        n_sample = int(len(candidates) * size)
+        if n_sample <= 0: continue
+        files.extend(random.sample(candidates, n_sample))
+    return files
+
 def save_as_pkl_binary(obj, filename):
     """Save object as pickle binary file.
     Thanks to https://stackoverflow.com/questions/19201290/how-to-save-a-dictionary-to-a-file/32216025
@@ -527,6 +549,15 @@ def df_balance_class_by_limited_over_sampling(df, label_column,
     X, _ = balance_class_by_limited_over_sampling(X, y, max_sample_per_class=max_sample_per_class,
                                                   multiply_limit=multiply_limit, random_state=random_state)
     return df.iloc[X].sort_index()
+
+from sklearn.model_selection import train_test_split
+
+def subsample_stratified(X, y, size=0.1):
+    """
+    Stratified subsampling.
+    """
+    _, X_test, _, y_test = train_test_split(X, y, test_size=size, stratify=y)
+    return X_test, y_test
 
 ## Visualization utilities
 
