@@ -108,7 +108,6 @@ def subsample_files_in_tree(root, filename_pattern, size):
     """
     files = []
     folders = [f for f in root.glob('**') if f.is_dir()]
-    print(root, folders)
     for folder in folders:
         candidates = [str(f) for f in folder.glob(filename_pattern)]
         n_sample = int(len(candidates) * size)
