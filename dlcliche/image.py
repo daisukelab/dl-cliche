@@ -96,7 +96,7 @@ def convert_mono_to_jpg(fromfile, tofile):
 
 # Borrowing from fast.ai course notebook
 from matplotlib import patches, patheffects
-def subplot_matrix(rows, columns, figsize=(12, 12)):
+def subplot_matrix(rows, columns, figsize=(12, 12), flat=True):
     """Subplot utility for drawing matrix of images.
     # Usage
     Following will show images in 2x3 matrix.
@@ -107,7 +107,9 @@ def subplot_matrix(rows, columns, figsize=(12, 12)):
     ```
     """
     fig, axes = plt.subplots(rows, columns, figsize=figsize)
-    return list(axes.flat) if 1 < rows*columns else [axes]
+    if flat:
+        axes = list(axes.flat)
+    return axes if 1 < rows*columns else [axes]
 
 
 def show_np_image(img, figsize=None, ax=None):

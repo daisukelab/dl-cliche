@@ -54,10 +54,9 @@ def n_by_m_distances(n, m, how='cosine'):
         l2_m = np.linalg.norm(m, axis=1)
         inner = np.dot(n, m.T)
         norms = np.dot(l2_n.reshape(-1, 1), l2_m.reshape(1, -1))
-        return inner / norms
+        return 1.0 - (inner / norms)
     elif how == 'euclidean':
-        # Thanks to https://stackoverflow.com/questions/32154475/einsum-and-distance-calculations
-        return np.sqrt(np.einsum('ijk->ij',(n[:,None,:] - m)**2))
+        return np.array([np.linalg.norm(m - a_n, axis=1) for a_n in n])
     else:
         raise Exception(f'Unknown how: {how}')
 
