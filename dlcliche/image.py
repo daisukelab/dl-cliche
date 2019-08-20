@@ -111,17 +111,24 @@ def subplot_matrix(rows, columns, figsize=(12, 12), flat=True):
         axes = list(axes.flat)
     return axes if 1 < rows*columns else [axes]
 
+def fix_image_ch(img):
+    """Fix image channel so that it locates last in shape."""
+    if img.shape[0] <= 3:
+        return img.transpose(1, 2, 0)
+    return img
 
-def show_np_image(img, figsize=None, ax=None):
+def show_np_image(img, figsize=None, ax=None, axis_off=False):
     """Show numpy object image with figsize on axes of subplot.
     Using this with subplot_matrix() will make it easy to plot matrix of images.
 
     # Returns
         Axes of subplot created, or given."""
+    img = fix_image_ch(img)
     if not ax: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(img)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
+    if axis_off: ax.axis('off')
     return ax
 def _draw_outline(o, lw):
     o.set_path_effects([patheffects.Stroke(

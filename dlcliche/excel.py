@@ -362,6 +362,14 @@ def opx_bar_chart(dest_ws, RC, src_ws, TL, BR, figtitle='', xtitle='', ytitle=''
     dest_ws.add_chart(chart, anchor)
 
 
+def _get_type_formula():
+    """Wrap version difference.""" 
+    try:
+        return opx.cell.cell.TYPE_FORMULA  # 2.6.2 ?
+    except:
+        return opx.cell.Cell.TYPE_FORMULA  # before?
+
+
 def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scaling=1.1, dont_narrower=False):
     """Auto adjust all column width in a worksheet.
     
@@ -373,11 +381,12 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         dont_narrower: Set True if you don't want make columns get narrower.
     """
     column_widths = []
+    cell_TYPE_FORMULA = _get_type_formula()
     for row in worksheet.iter_rows():
         for i, cell in enumerate(row):
             if len(column_widths) <= i:
                 column_widths.append(default_width)
-            if cell.TYPE_FORMULA != cell.data_type:
+            if cell_TYPE_FORMULA != cell.data_type:
                 column_widths[i] = max(column_widths[i], unicode_visible_width(str(cell.value)))
 
     for i, column_width in enumerate(column_widths):
