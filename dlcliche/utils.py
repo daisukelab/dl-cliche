@@ -102,7 +102,10 @@ def subsample_files_in_tree(root, filename_pattern, size):
     Arguments:
         root: Root folder to search files from.
         filename_pattern: Wildcard pattern like: '*.png'.
-        size: (0, 1) size to sub-sample: 0.5 for 50%. Or integer size.
+        size:
+            (0, 1): size to sub-sample; 0.5 for 50%.
+            1 or 1.: 100%.
+            integer > 1: Number of samples.
 
     Returns:
         List of sub-sampled files.
@@ -113,7 +116,8 @@ def subsample_files_in_tree(root, filename_pattern, size):
     folders = [f for f in root.glob('**') if f.is_dir()]
     for folder in folders:
         candidates = [str(f) for f in folder.glob(filename_pattern)]
-        n_sample = int(len(candidates) * size) if size < 1. else min(size, len(candidates))
+        n_sample = int(len(candidates) * size) if size < 1. else \
+            len(candidates) if int(size) == 1 else min(size, len(candidates))
         if n_sample <= 0: continue
         files.extend(random.sample(candidates, n_sample))
     return files
