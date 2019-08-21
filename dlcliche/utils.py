@@ -122,6 +122,25 @@ def subsample_files_in_tree(root, filename_pattern, size):
         files.extend(random.sample(candidates, n_sample))
     return files
 
+def copy_subsampled_files(root, dest, wildcard, size, symlinks=False):
+    """
+    Copy all files that match wildcard under root folder, to the dest folder.
+    Note that all files in the sub tree of root folder will be copied.
+    Latter found file among the same name files will survive,
+    all others will be overwritten.
+
+    Arguments:
+        root: Root source folder.
+        dest: destination folder.
+        wildcard: Wildcard to find files.
+        size: Size to subsample, see subsample_files_in_tree() for the detail.
+        symlinks: Keeps symbolic links or makes new copy. See shutil.copytree() for the detail.
+    """
+    files = subsample_files_in_tree(root, wildcard, size=size)
+    ensure_folder(dest)
+    for f in files:
+        copy_any(Path(f).absolute(), dest, symlinks=symlinks)
+
 def save_as_pkl_binary(obj, filename):
     """Save object as pickle binary file.
     Thanks to https://stackoverflow.com/questions/19201290/how-to-save-a-dictionary-to-a-file/32216025
