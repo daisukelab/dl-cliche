@@ -96,21 +96,24 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
 
 def subsample_files_in_tree(root, filename_pattern, size):
     """
-    Sub-sample file names under root folder.
+    Sub-sample list of filenames under root folder.
+    This ensures to keep sample balance among folders.
 
     Arguments:
         root: Root folder to search files from.
         filename_pattern: Wildcard pattern like: '*.png'.
-        size: (0, 1) size to sub-sample: 0.5 for 50%.
+        size: (0, 1) size to sub-sample: 0.5 for 50%. Or integer size.
 
     Returns:
         List of sub-sampled files.
+        Note that number of files in a folder could be less than size,
+        if original number of files is less than size. No oversampling.
     """
     files = []
     folders = [f for f in root.glob('**') if f.is_dir()]
     for folder in folders:
         candidates = [str(f) for f in folder.glob(filename_pattern)]
-        n_sample = int(len(candidates) * size)
+        n_sample = int(len(candidates) * size) if size < 1. else min(size, len(candidates))
         if n_sample <= 0: continue
         files.extend(random.sample(candidates, n_sample))
     return files
