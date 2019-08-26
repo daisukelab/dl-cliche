@@ -71,10 +71,10 @@ def prepare_CIFAR10(data_path=Path('data_CIFAR10')):
 
     classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
     if not have_already_been_done():
-        build_images_folder(data_root=data_path, X=train_ds.train_data,
-                            labels=train_ds.train_labels, dest_folder='train')
-        build_images_folder(data_root=data_path, X=valid_ds.test_data,
-                            labels=valid_ds.test_labels, dest_folder='valid')
+        build_images_folder(data_root=data_path, X=train_ds.data,
+                            labels=train_ds.targets, dest_folder='train')
+        build_images_folder(data_root=data_path, X=valid_ds.data,
+                            labels=valid_ds.targets, dest_folder='valid')
 
     return data_path/'images'
 
