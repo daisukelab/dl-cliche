@@ -427,16 +427,23 @@ def df_mask_by_str_conditions(df, conditions):
     else:
         return df_mask_by_str_or_list(df, col_or_op, key_or_conds)
 
-def df_str_replace(df, from_strs, to_str):
+def df_str_replace(df, from_strs, to_str, regex=True):
     """Apply str.replace to entire DataFrame inplace."""
     for i, row in df.iterrows():
-        df.ix[i] = df.ix[i].str.replace(from_strs, to_str)
+        df.ix[i] = df.ix[i].str.replace(from_strs, to_str, regex=regex)
 
 def df_cell_str_replace(df, from_str, to_str):
     """Replace cell string with new string if entire string matches."""
-    for i, row in df.iterrows():
-        for c in df.columns:
-            df.at[i, c] = to_str if str(df.at[i, c]) == from_str else df.at[i, c]
+    df_str_replace(df, from_strs, to_str, regex=False)
+
+def df_print_differences(df1, df2):
+    """Print all difference between two dataframes."""
+    if df1.shape != df2.shape:
+        print(f'Error: df1.shape={df1.shape} != df2.shape{df2.shape}')
+        return
+    rows, cols = np.where(df1 != df2)
+    for r, c in zip(rows, cols):
+        print(f'at[{r},{c}] "{df1.iat[r, c]}" != "{df2.iat[r, c]}"')
 
 _EXCEL_LIKE = ['.csv', '.xls', '.xlsx', '.xlsm']
 def is_excel_file(filename):

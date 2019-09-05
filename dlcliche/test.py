@@ -21,7 +21,7 @@ def recursive_test_array(cls, a, b, msg=None, fn=None):
     else:
         fn(a, b, msg=msg)
 
-def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
+def test_exactly_same_df(title, df1, df2, fillna=0, return_diff=False):
     """Test that two pandas DataFrames are the same, and print result.
     If there's anything different, differences will be shown.
 
@@ -29,11 +29,12 @@ def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
         title: Title text to print right before result.
         df1: One DataFrame to compare.
         df2: Another DataFrame.
-        fillna: Fill N/A beforehand or not. Note that N/A is always False when compared.
-        filler: Valid if fillna=True, filling value to feed to pandas fillna().
+        fillna: Fill N/A with its value beforehand if it is not None.
+        return_diff: Returns difference of dfs.
     """
-    df1 = df1.fillna(filler)
-    df2 = df2.fillna(filler)
+    df1 = df1.fillna(fillna)
+    df2 = df2.fillna(fillna)
+    diff = []
     try:
         if len(df1) != len(df2):
             raise Exception('DataFrames have different lengths. %d != %d' % (len(df1), len(df2)))
@@ -41,19 +42,22 @@ def test_exactly_same_df(title, df1, df2, fillna=True, filler=0):
             raise Exception('DataFrames have different columns. {} vs. {}'.format(df1.columns, df2.columns))
         result = df1.equals(df2)#np.all(np.all(df1 == df2)) # np.all for rows, and cols -> final answer
         if not result:
-            raise Exception('Differences are [rows, columns] = \n{}'.format(list(np.where(df1 != df2))))
+            diff = list(np.where(df1 != df2))
+            raise Exception('Differences are [rows, columns] = \n{}'.format(diff))
         print(title, 'Passed')
     except Exception as e:
         print(title, 'Failed:', e)
         result = False
+    if return_diff:
+        return result, diff
     return result
 
 @deprecated
-def test_exactly_the_same_df(title, df1, df2, fillna=True, filler=0):
-    return test_exactly_same_df(title, df1, df2, fillna=fillna, filler=filler)
+def test_exactly_the_same_df(title, df1, df2, fillna=0, return_diff=False):
+    return test_exactly_same_df(title, df1, df2, fillna=fillna, return_diff=return_diff)
 
 
-def test_exactly_same_excel(title, excel1, excel2, fillna=True, filler=0):
+def test_exactly_same_excel(title, excel1, excel2, fillna=0, return_diff=False):
     """Test that two Excel books are the same and print result.
     If there's anything different, differences will be shown.
 
@@ -61,16 +65,22 @@ def test_exactly_same_excel(title, excel1, excel2, fillna=True, filler=0):
         title: Title text to print right before result.
         excel1: One Excel book to compare.
         excel2: Another Excel book.
-        fillna: Fill N/A beforehand or not. Note that N/A is always False when compared.
-        filler: Valid if fillna=True, filling value to feed to pandas fillna().
+        fillna: Fill N/A with its value beforehand if it is not None.
+        return_diff: Returns difference of dfs.
     """
     dfs1 = df_load_excel_like(excel1, sheetname=None)
     dfs2 = df_load_excel_like(excel2, sheetname=None)
     results = []
+
+    if len(dfs1) != len(dfs2):
+        print(f'Failed due to different # of sheets: {excel1}={len(dfs1)}, {excel2}={len(dfs2)}')
+        return False
+
     for k1, k2 in zip(dfs1, dfs2):
         df1 = dfs1[k1]
         df2 = dfs2[k2]
-        results.append(test_exactly_same_df(f'{k1} vs {k2} ?', df1, df2, fillna=fillna, filler=filler))
+        results.append(test_exactly_same_df(f'{k1} vs {k2} ?', df1, df2, fillna=fillna, return_diff=return_diff))
+
     single_result = np.all(results)
     print(f'{title} {"Passed" if single_result else "Failed"}')
     return single_result

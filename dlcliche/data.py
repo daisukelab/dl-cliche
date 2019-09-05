@@ -93,6 +93,10 @@ def _is_targz(filename):
     return filename.endswith(".tar.gz")
 
 
+def _is_tarxz(filename):
+    return filename.endswith(".tar.xz")
+
+
 def _is_gzip(filename):
     return filename.endswith(".gz") and not filename.endswith(".tar.gz")
 
@@ -111,6 +115,9 @@ def extract_archive(from_path, to_path=None, remove_finished=False):
     elif _is_targz(from_path):
         with tarfile.open(from_path, 'r:gz') as tar:
             tar.extractall(path=to_path)
+    elif _is_tarxz(from_path):
+        with tarfile.open(from_path, 'r:xz') as tar:
+            tar.extractall(path=to_path)
     elif _is_gzip(from_path):
         to_path = os.path.join(to_path, os.path.splitext(os.path.basename(from_path))[0])
         with open(to_path, "wb") as out_f, gzip.GzipFile(from_path) as zip_f:
@@ -124,6 +131,7 @@ def extract_archive(from_path, to_path=None, remove_finished=False):
     if remove_finished:
         os.remove(from_path)
 # ------ end of borrowing from https://github.com/pytorch/vision/blob/master/torchvision/datasets/utils.py
+
 
 def prepare_Food101(data_path):
     """
@@ -156,3 +164,33 @@ def prepare_Food101(data_path):
     ensure_delete(data_path/'food-101')
 
     return data_path
+
+
+def prepare_MVTecAD(data_path=Path('mvtec_ad')):
+    """
+    Download and extract MVTec Anomaly Detection (MVTec AD) dataset.
+    Files will be placed as follows:
+        data_path/original ... for all original folders/files.
+
+    Returns:
+        data_path: Contains all original folders/files.
+        test_cases: List of test cases in the dataset.
+    """
+    def have_already_been_done():
+        return org_path.is_dir()
+
+    url = 'ftp://guest:GU.205dldo@ftp.softronics.ch/mvtec_anomaly_detection/mvtec_anomaly_detection.tar.xz'
+    md5 = 'eefca59f2cede9c3fc5b6befbfec275e'
+    file_path = data_path/url.split('/')[-1]
+    org_path = data_path/'original'
+
+    if not have_already_been_done():
+        if not (file_path).is_file():
+            datasets.utils.download_url(url, str(org_path), file_path.name, md5)
+        ensure_folder(org_path)
+        print(f'Extracting {file_path}')
+        extract_archive(str(file_path), str(org_path), remove_finished=False)
+
+    testcases = [d.name for d in org_path.iterdir() if d.is_dir()]
+
+    return org_path, testcases
