@@ -47,7 +47,7 @@ def prepare_CIFAR10(data_path=Path('data_CIFAR10')):
         data_path/images/('train' or 'valid')/(class)
     Where filenames are:
         img(class)_(count index).png
-    
+
     Returns:
         Restructured data path.
     """
@@ -166,23 +166,27 @@ def prepare_Food101(data_path):
     return data_path
 
 
-def prepare_MVTecAD(data_path=Path('mvtec_ad')):
+def prepare_MVTecAD(data_path=Path('mvtec_ad'), exclude_toothbrush=True, chmod=True):
     """
     Download and extract MVTec Anomaly Detection (MVTec AD) dataset.
     Files will be placed as follows:
-        data_path/original ... for all original folders/files.
+        data_path/original ... all extracted original folders/files, and tar archive.
+
+    Arguments:
+        data_path: Path to place data.
+        exclude_toothbrush: True if excluding toothbrush from return value `testcases`. It has only one test class.
 
     Returns:
-        data_path: Contains all original folders/files.
-        test_cases: List of test cases in the dataset.
+        data_path: Input data_path as is.
+        testcases: List of test cases in the dataset.
     """
     def have_already_been_done():
         return org_path.is_dir()
 
     url = 'ftp://guest:GU.205dldo@ftp.softronics.ch/mvtec_anomaly_detection/mvtec_anomaly_detection.tar.xz'
     md5 = 'eefca59f2cede9c3fc5b6befbfec275e'
-    file_path = data_path/url.split('/')[-1]
     org_path = data_path/'original'
+    file_path = org_path/url.split('/')[-1]
 
     if not have_already_been_done():
         if not (file_path).is_file():
@@ -191,6 +195,11 @@ def prepare_MVTecAD(data_path=Path('mvtec_ad')):
         print(f'Extracting {file_path}')
         extract_archive(str(file_path), str(org_path), remove_finished=False)
 
-    testcases = [d.name for d in org_path.iterdir() if d.is_dir()]
+        if chmod:
+            chmod_tree_all(org_path, mode=0o775)
 
-    return org_path, testcases
+    testcases = sorted([d.name for d in org_path.iterdir() if d.is_dir()])
+    if exclude_toothbrush:
+        testcases = [tc for tc in testcases if tc != 'toothbrush']
+
+    return data_path, testcases

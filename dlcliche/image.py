@@ -178,3 +178,29 @@ def union_of_bboxes(height, width, bboxes, erosion_rate=0.0, to_int=False):
         x1, y1 = int(math.floor(x1)), int(math.floor(y1))
         x2, y2 = int(np.min([width, math.ceil(x2)])), int(np.min([height, math.ceil(y2)]))
     return x1, y1, x2, y2
+
+
+# Dimensionality Reduction Visualization
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
+
+
+def _show_2D_XXX(cls, many_dim_vector, target, title, figsize, labels):
+    many_dim_vector = many_dim_vector
+    many_dim_vector_reduced = cls(n_components=2, random_state=0).fit_transform(many_dim_vector)
+
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    cax = ax.scatter(many_dim_vector_reduced[:, 0], many_dim_vector_reduced[:, 1], c=target, cmap='jet')
+    ax.set_title(title)
+    cbar = fig.colorbar(cax)
+    if labels is not None:
+        cbar.ax.set_yticklabels(labels)
+    return fig, ax
+
+
+def show_2D_tSNE(many_dim_vector, target, title='t-SNE viz', figsize=(8, 6), labels=None):
+    return _show_2D_XXX(TSNE, many_dim_vector, target, title, figsize, labels)
+
+
+def show_2D_PCA(many_dim_vector, target, title='PCA viz', figsize=(8, 6), labels=None):
+    return _show_2D_XXX(PCA, many_dim_vector, target, title, figsize, labels)

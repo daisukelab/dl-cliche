@@ -94,6 +94,14 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
 
+def chmod_tree_all(tree_root, mode=0o775):
+    """Change permission for all the files or directories under the tree_root."""
+    for root, dirs, files in os.walk(tree_root):
+        for d in dirs:
+            os.chmod(os.path.join(root, d), mode)
+        for f in files:
+            os.chmod(os.path.join(root, f), mode)
+
 def subsample_files_in_tree(root, filename_pattern, size):
     """
     Sub-sample list of filenames under root folder.
