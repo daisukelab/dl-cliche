@@ -493,6 +493,26 @@ def df_read_sjis_csv(filename, **args):
     with codecs.open(filename, 'r', 'Shift-JIS', 'ignore') as file:
         return pd.read_table(file, delimiter=',', **args)
 
+import seaborn as sns
+def df_highlight_max(df, color='yellow', axis=1):
+    """Highlight max valued cell with color.
+    Thanks to https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
+    """
+    def highlight_max(s):
+        '''Highlight the maximum in a Series yellow or any color.'''
+        is_max = s == s.max()
+        return [f'background-color: {color}' if v else '' for v in is_max]
+    df = df.copy()
+    return df.style.apply(highlight_max, axis=axis)
+
+def df_apply_sns_color_map(df, color='red', **kwargs):
+    """Set color map to a dataframe.
+    Thanks to https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
+    """
+    cm = sns.light_palette(color, as_cmap=True, **kwargs)
+    df = df.copy()
+    return df.style.background_gradient(cmap=cm)
+
 ## Dataset utilities
 
 from imblearn.over_sampling import RandomOverSampler
