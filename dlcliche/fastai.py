@@ -3,13 +3,33 @@ Fast.ai 1.0 helper functions
 """
 
 from .image import *
+
+
+import fastai
+import fastai.text
+import fastprogress
+
+def fastai_progress_as_text():
+    """Disalbe fast.ai progress bar.
+    Thanks to https://forums.fast.ai/t/default-to-completely-disable-progress-bar/40010/3
+    """
+    fastprogress.fastprogress.NO_BAR = True
+    master_bar, progress_bar = fastprogress.force_console_behavior()
+    fastai.basic_train.master_bar, fastai.basic_train.progress_bar = master_bar, progress_bar
+    fastai.basic_data.master_bar, fastai.basic_data.progress_bar = master_bar, progress_bar
+    dataclass.master_bar, dataclass.progress_bar = master_bar, progress_bar
+    fastai.text.master_bar, fastai.text.progress_bar = master_bar, progress_bar
+    fastai.text.data.master_bar, fastai.text.data.progress_bar = master_bar, progress_bar
+    fastai.core.master_bar, fastai.core.progress_bar = master_bar, progress_bar
+
+
 from fastai.callbacks.hooks import hook_output
 from fastai.vision import *
 from skimage.transform import resize
 
 def visualize_cnn_by_cam(learn, data_index=None, ax=None, ds_type='valid', ds=None, x=None, y=None,
                          label=None, cuda=True, show_original='vertical'):
-    """Show Grad-CAM
+    """Visualize Grad-CAM of a fast.ai learner.
     Thanks to https://nbviewer.jupyter.org/github/fastai/course-v3/blob/master/nbs/dl1/lesson6-pets-more.ipynb
 
     Examples:
