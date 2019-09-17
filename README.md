@@ -1,10 +1,19 @@
-# dl-cliche: A small python module to summarize all cliche codes
+# dl-cliche: Packaging cliche utilities
 
-For Japanese: 日本語で解説記事を用意しました。 ⇒ [機械学習個人レベルのワークフロー改善@Qiita](https://qiita.com/daisukelab/items/109812791d369891b812)
+This is a python module started to package utility functions locally made but used everyday.
+And while being improved along with other projects, these short-cut functions have become essential to work with various project.
 
-This is a python module created for local use, but also addresses widely common tiny issues.
+Now this is pip ready.
 
-You can replace cliche like this:
+## Installation
+
+```
+pip install dlcliche
+```
+
+## What's for?
+
+You can avoid repeating yourself with these cliches:
 
 ```python
 %matplotlib inline
@@ -37,3 +46,7 @@ from dlcliche.notebook import *
 from dlcliche.utils import *
 ```
 
+## Documents
+
+- [ ] Basic function interface document to be ready.
+- [x] (Japanese) [機械学習個人レベルのワークフロー改善@Qiita](https://qiita.com/daisukelab/items/109812791d369891b812)

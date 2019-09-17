@@ -2,16 +2,23 @@
 
 from setuptools import setup, find_packages
 
+with open("README.md", "r") as f:
+    readme = f.read()
+
 setup(
     name='dl-cliche',
-    version='0.0.2',
-    description='A small python library to summarize all cliche codes',
-    #long_description=readme,
+    version='0.1.0',
+    description='dl-cliche: Packaging cliche utilities',
+    long_description=readme,
+    long_description_content_type="text/markdown",
     author='daisukelab',
-    author_email='foo@bar.com',
-    install_requires=['numpy'],
+    author_email='contact.daisukelab@gmail.com',
+    install_requires=['numpy', 'pandas', 'matplotlib', 'tqdm', 'easydict'],
     url='https://github.com/daisukelab/dl-cliche',
     license=license,
     packages=find_packages(exclude=('test', 'docs')),
-    test_suite='test'
+    test_suite='test',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+    ],
 )
