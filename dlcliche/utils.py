@@ -161,6 +161,7 @@ def load_pkl(filename):
     with open(filename, 'rb') as f:
         return pickle.load(f)
 
+
 ## Log utilities
 
 import logging
@@ -189,6 +190,7 @@ def get_logger(name=None, level=logging.DEBUG, format=None, print=True, output_f
     _loggers[name] = log
     return log
 
+
 ## Multi process utilities
 
 def caller_func_name(level=2):
@@ -214,6 +216,7 @@ def is_file_mutex_locked(filename=None):
     """Check if file mutex is locked or not."""
     filename = _file_mutex_filename(filename)
     return Path(filename).exists()
+
 
 ## Date utilities
 
@@ -313,6 +316,7 @@ def all_elements_are_identical(iterator):
         return True
     return all(first == rest for rest in iterator)
 
+
 ## Text utilities
 
 # Thanks to https://github.com/dsindex/blog/wiki/%5Bpython%5D-difflib,-show-differences-between-two-strings
@@ -343,6 +347,7 @@ import unicodedata
 def unicode_visible_width(unistr):
     """Returns the number of printed characters in a Unicode string."""
     return sum([1 if unicodedata.east_asian_width(char) in ['N', 'Na'] else 2 for char in unistr])
+
 
 ## Pandas utilities
 
@@ -513,6 +518,7 @@ def df_apply_sns_color_map(df, color='red', **kwargs):
     df = df.copy()
     return df.style.background_gradient(cmap=cm)
 
+
 ## Dataset utilities
 
 from imblearn.over_sampling import RandomOverSampler
@@ -618,6 +624,7 @@ def subsample_stratified(X, y, size=0.1):
     """
     _, X_test, _, y_test = train_test_split(X, y, test_size=size, stratify=y)
     return X_test, y_test
+
 
 ## Visualization utilities
 
@@ -778,3 +785,36 @@ def plot_confusion_matrix(y_test, y_pred, classes,
     plt.xlabel('Predicted label')
     plt.tight_layout()
     np.set_printoptions(**po)
+
+
+def deterministic_everything(seed=42, pytorch=True, torch_benchmark=True, tf=False):
+    """Set pseudo random everything deterministic. a.k.a. `seed_everything`
+    Universal to major frameworks.
+
+    Thanks to https://docs.fast.ai/dev/test.html#getting-reproducible-results
+    Thanks to https://github.com/pytorch/pytorch/issues/11278
+    """
+
+    # Python RNG
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+    # Numpy RNG
+    import numpy as np
+    np.random.seed(seed)
+
+    # Pytorch RNGs
+    if pytorch:
+        import torch
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
+
+        # Pytorch benchmark
+        if torch_benchmark: torch.backends.cudnn.benchmark = True
+
+    # TensorFlow RNG
+    if tf:
+        import tensorflow as tf
+        tf.set_random_seed(seed)
+

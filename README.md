@@ -1,14 +1,12 @@
 # dl-cliche: Packaging cliche utilities
 
-This is a python module started to package utility functions locally made but used everyday.
-And while being improved along with other projects, these short-cut functions have become essential to work with various project.
-
-Now this is pip ready.
+This is a python module started to package utility functions that are locally made but used everyday.
+After while being improved along with other projects, these short-cut functions have become essential to work with various project.
 
 ## Installation
 
-```
-pip install dlcliche
+```shell
+pip install dl-cliche
 ```
 
 ## What's for?
