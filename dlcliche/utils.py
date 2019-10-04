@@ -611,7 +611,7 @@ def df_balance_class_by_limited_over_sampling(df, label_column,
                                               max_sample_per_class=None, multiply_limit=2.,
                                               random_state=42):
     """Balance class distribution in DataFrame with balance_class_by_limited_over_sampling."""
-    X, y = list(range(len(df))), list(df[label_column])
+    X, y = np.array(range(len(df))), df[label_column].values
     X, _ = balance_class_by_limited_over_sampling(X, y, max_sample_per_class=max_sample_per_class,
                                                   multiply_limit=multiply_limit, random_state=random_state)
     return df.iloc[X].sort_index()
