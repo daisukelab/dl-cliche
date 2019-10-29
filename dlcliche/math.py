@@ -25,7 +25,7 @@ def np_describe(arr):
 
 def np_softmax(z):
     """Numpy version softmax.
-    Thanjs to https://stackoverflow.com/a/39558290/6528729
+    Thanks to https://stackoverflow.com/a/39558290/6528729
     """
     assert len(z.shape) == 2
     s = np.max(z, axis=1)
@@ -92,6 +92,18 @@ def arithmetic_mean_preds(list_preds):
     preds = list_preds[0].copy()
     for next_preds in list_preds[1:]:
         preds = np.add(preds, next_preds)
+    return preds / len(list_preds)
+
+
+def soft_mean_preds(list_preds, t=0.5):
+    """
+    Thanks to https://www.kaggle.com/c/severstal-steel-defect-detection/discussion/107716#620952
+    """
+    def _sharpen(p, t):
+        return p**t if t!= 0: else p
+    preds = _sharpen(list_preds[0].copy(), t=t)
+    for next_preds in list_preds[1:]:
+        preds = np.add(preds, _sharpen(next_preds, t))
     return preds / len(list_preds)
 
 

@@ -1,3 +1,5 @@
+import IPython
+
 # Thanks to https://github.com/ipython/ipython/issues/9732
 from IPython import get_ipython
 ipython = get_ipython()

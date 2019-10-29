@@ -1,7 +1,6 @@
 from .general import *
 from .ignore_warnings import *
 
-import IPython
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -521,9 +520,6 @@ def df_apply_sns_color_map(df, color='red', **kwargs):
 
 ## Dataset utilities
 
-from imblearn.over_sampling import RandomOverSampler
-from imblearn.under_sampling import RandomUnderSampler
-
 def flatten_y_if_onehot(y):
     """De-one-hot y, i.e. [0,1,0,0,...] to 1 for all y."""
     return y if len(np.array(y).shape) == 1 else np.argmax(y, axis = -1)
@@ -565,10 +561,12 @@ def _balance_class(X, y, min_or_max, sampler_class, random_state):
 
 def balance_class_by_over_sampling(X, y, random_state=42):
     """Balance class distribution with imbalanced-learn RandomOverSampler."""
+    from imblearn.over_sampling import RandomOverSampler
     return  _balance_class(X, y, 'max', RandomOverSampler, random_state)
 
 def balance_class_by_under_sampling(X, y, random_state=42):
     """Balance class distribution with imbalanced-learn RandomUnderSampler."""
+    from imblearn.under_sampling import RandomUnderSampler
     return  _balance_class(X, y, 'min', RandomUnderSampler, random_state)
 
 def df_balance_class_by_over_sampling(df, label_column, random_state=42):
