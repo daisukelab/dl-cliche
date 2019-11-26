@@ -19,6 +19,7 @@ def ensure_folder(folder):
     """Make sure a folder exists."""
     Path(folder).mkdir(exist_ok=True, parents=True)
 
+
 def ensure_delete(folder_or_file):
     anything = Path(folder_or_file)
     if anything.is_dir():
@@ -26,10 +27,12 @@ def ensure_delete(folder_or_file):
     elif anything.exists():
         anything.unlink()
 
+
 def copy_file(src, dst):
     """Copy source file to destination file."""
     assert Path(src).is_file()
     shutil.copy(str(src), str(dst))
+
 
 def _copy_any(src, dst, symlinks):
     if Path(src).is_dir():
@@ -40,11 +43,13 @@ def _copy_any(src, dst, symlinks):
     else:
         copy_file(src, dst)
 
+
 def copy_any(src, dst, symlinks=True):
     """Copy any file or folder recursively.
     Source file can be list/array of files.
     """
     do_list_item(_copy_any, src, dst, symlinks)
+
 
 def do_list_item(func, src, *prms):
     if isinstance(src, (list, tuple, np.ndarray)):
@@ -55,8 +60,10 @@ def do_list_item(func, src, *prms):
     else:
         return func(src, *prms)
 
+
 def _move_file(src, dst):
     shutil.move(str(src), str(dst))
+
 
 def move_file(src, dst):
     """Move source file to destination file/folder.
@@ -64,9 +71,11 @@ def move_file(src, dst):
     """
     do_list_item(_move_file, src, dst)
 
+
 def symlink_file(fromfile, tofile):
     """Make fromfile's symlink as tofile."""
     Path(tofile).symlink_to(fromfile)
+
 
 def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
     """Do file copy like operation from files to dest_folder.
@@ -93,6 +102,7 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
 
+
 def chmod_tree_all(tree_root, mode=0o775):
     """Change permission for all the files or directories under the tree_root."""
     for root, dirs, files in os.walk(tree_root):
@@ -100,6 +110,7 @@ def chmod_tree_all(tree_root, mode=0o775):
             os.chmod(os.path.join(root, d), mode)
         for f in files:
             os.chmod(os.path.join(root, f), mode)
+
 
 def subsample_files_in_tree(root, filename_pattern, size):
     """
@@ -129,6 +140,7 @@ def subsample_files_in_tree(root, filename_pattern, size):
         files.extend(random.sample(candidates, n_sample))
     return files
 
+
 def copy_subsampled_files(root, dest, wildcard, size, symlinks=False):
     """
     Copy all files that match wildcard under root folder, to the dest folder.
@@ -148,12 +160,14 @@ def copy_subsampled_files(root, dest, wildcard, size, symlinks=False):
     for f in files:
         copy_any(Path(f).absolute(), dest, symlinks=symlinks)
 
+
 def save_as_pkl_binary(obj, filename):
     """Save object as pickle binary file.
     Thanks to https://stackoverflow.com/questions/19201290/how-to-save-a-dictionary-to-a-file/32216025
     """
     with open(filename, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
 
 def load_pkl(filename):
     """Load pickle object from file."""
@@ -196,8 +210,10 @@ def caller_func_name(level=2):
     """Return caller function name."""
     return sys._getframe(level).f_code.co_name
 
+
 def _file_mutex_filename(filename):
     return filename or '/tmp/'+Path(caller_func_name(level=3)).stem+'.lock'
+
 
 def lock_file_mutex(filename=None):
     """Lock file mutex (usually placed under /tmp).
@@ -206,10 +222,13 @@ def lock_file_mutex(filename=None):
     filename = _file_mutex_filename(filename)
     with open(filename, 'w') as f:
         f.write('locked at {}'.format(datetime.datetime.now()))
+
+
 def release_file_mutex(filename=None):
     """Release file mutex."""
     filename = _file_mutex_filename(filename)
     ensure_delete(filename)
+
 
 def is_file_mutex_locked(filename=None):
     """Check if file mutex is locked or not."""
@@ -225,6 +244,7 @@ def str_to_date(text):
     else:
         temp_dt = datetime.datetime.strptime(text, '%Y-%m-%d')
     return datetime.date(temp_dt.year, temp_dt.month, temp_dt.day)
+
 
 def get_week_start_end_dates(week_no:int, year=None) -> [datetime.datetime, datetime.datetime]:
     """Get start and end date of an ISO calendar week.
@@ -243,9 +263,21 @@ def get_week_start_end_dates(week_no:int, year=None) -> [datetime.datetime, date
     end_date = datetime.datetime.strptime(f'{year}-W{week_no:02d}-7', "%G-W%V-%u").date()
     return [start_date, end_date]
 
-def get_this_week_no():
-    """Get ISO calendar week no of today."""
-    return datetime.datetime.today().isocalendar()[1]
+
+def get_this_week_no(date=None):
+    """Get ISO calendar week no of given date.
+    If date is not given, get for today."""
+    if date is None:
+        date = datetime.date.today()
+    return date.isocalendar()[1]
+
+
+def get_num_of_weeks(year):
+    """Returns number of weeks in a given year.
+    Following wikipedia: _'The number of weeks in a given year is equal to the corresponding week number of 28 December.'_
+    """
+    return get_this_week_no(date=datetime.date(year=year, month=12, day=28))
+
 
 def daterange(start_date, end_date, inclusive=False):
     """Yield date from start_date until the day before end_date.
@@ -256,6 +288,7 @@ def daterange(start_date, end_date, inclusive=False):
     days = int((end_date - start_date).days) + (1 if inclusive else 0)
     for n in range(days):
         yield start_date + datetime.timedelta(n)
+
 
 def add_days_to_date(one_date, days, not_exceed='today'):
     """Add number of days to one_date that doesn't exceed not_exceed.
@@ -285,25 +318,30 @@ def write_text_list(textfile, a_list):
     with open(textfile, 'w') as f:
         f.write('\n'.join(a_list)+'\n')
 
+
 def read_text_list(filename) -> list:
     """Read text file splitted as list of texts, stripped."""
     with open(filename) as f:
         lines = f.read().splitlines()
         return [l.strip() for l in lines]
 
+
 from itertools import chain
 def flatten_list(lists):
     return list(chain.from_iterable(lists))
 
+
 def is_array_like(item):
     """Check if item is an array-like object."""
     return isinstance(item, (list, set, tuple, np.ndarray))
+
 
 def is_flat_array(array):
     """Check if array doesn't have array-like object."""
     for item in array:
         if is_array_like(item): return False
     return True
+
 
 # Thanks to https://stackoverflow.com/questions/3844801/check-if-all-elements-in-a-list-are-identical
 def all_elements_are_identical(iterator):
@@ -342,6 +380,7 @@ def show_text_diff(text, n_text):
             raise RuntimeError
     return ''.join(output)
 
+
 import unicodedata
 def unicode_visible_width(unistr):
     """Returns the number of printed characters in a Unicode string."""
@@ -354,6 +393,7 @@ def df_to_csv_excel_friendly(df, filename, **args):
     """df.to_csv() to be excel friendly UTF-8 handling."""
     df.to_csv(filename, encoding='utf_8_sig', **args)
 
+
 def df_merge_update(df_list):
     """Merge data frames while update duplicated index with followed row.
     
@@ -365,6 +405,7 @@ def df_merge_update(df_list):
         tmp_df = pd.concat([master, df])
         master = tmp_df[~tmp_df.index.duplicated(keep='last')].sort_index()
     return master
+
 
 from functools import reduce
 def df_merge_simply(dataframes):
@@ -380,6 +421,7 @@ def df_merge_simply(dataframes):
     df_merged = reduce(lambda left,right: pd.merge(left, right, how='outer'), dataframes)
     return df_merged
 
+
 def df_select_by_keyword(source_df, keyword, search_columns=None, as_mask=False):
     """Select data frame rows by a search keyword.
     Any row will be selected if any of its search columns contain the keyword.
@@ -394,6 +436,7 @@ def df_select_by_keyword(source_df, keyword, search_columns=None, as_mask=False)
     if as_mask:
         return mask
     return source_df.loc[mask]
+
 
 def df_select_by_keywords(source_df, keys_cols, and_or='or', as_mask=False):
     """Multi keyword version of df_select_by_keyword.
@@ -412,6 +455,7 @@ def df_select_by_keywords(source_df, keys_cols, and_or='or', as_mask=False):
         return mask
     return source_df.loc[mask]
 
+
 def df_mask_by_str_or_list(df, column, keys):
     """Find str match and make mask of dataframe.
     If multiple keys are fed, mask will be AND-calculated among keys.
@@ -422,6 +466,7 @@ def df_mask_by_str_or_list(df, column, keys):
         this_mask = df[column].str.find(key) >= 0
         mask = this_mask if mask is None else (mask & this_mask)
     return mask
+
 
 def df_mask_by_str_conditions(df, conditions):
     """Find dataframe rows that matches condition of str search.
@@ -439,14 +484,17 @@ def df_mask_by_str_conditions(df, conditions):
     else:
         return df_mask_by_str_or_list(df, col_or_op, key_or_conds)
 
+
 def df_str_replace(df, from_strs, to_str, regex=True):
     """Apply str.replace to entire DataFrame inplace."""
     for i, row in df.iterrows():
         df.ix[i] = df.ix[i].str.replace(from_strs, to_str, regex=regex)
 
+
 def df_cell_str_replace(df, from_str, to_str):
     """Replace cell string with new string if entire string matches."""
     df_str_replace(df, from_strs, to_str, regex=False)
+
 
 def df_print_differences(df1, df2):
     """Print all difference between two dataframes."""
@@ -457,13 +505,16 @@ def df_print_differences(df1, df2):
     for r, c in zip(rows, cols):
         print(f'at[{r},{c}] "{df1.iat[r, c]}" != "{df2.iat[r, c]}"')
 
+
 _EXCEL_LIKE = ['.csv', '.xls', '.xlsx', '.xlsm']
 def is_excel_file(filename):
     # not accepted if suffix == '.csv': return True
     return Path(filename).suffix.lower() in _EXCEL_LIKE
 
+
 def is_csv_file(filename):
     return Path(filename).suffix.lower() == '.csv'
+
 
 def pd_read_excel_keep_dtype(io, **args):
     """pd.read_excel() wrapper to do as described in pandas document:
@@ -475,9 +526,11 @@ def pd_read_excel_keep_dtype(io, **args):
     """
     return pd.read_excel(io, dtype=object, **args)
 
+
 def pd_read_csv_as_str(filename, **args):
     """pd.read_csv() wrapper to preserve data type = str"""
     return pd.read_csv(filename, dtype=object, **args)
+
 
 def df_load_excel_like(filename, preserve_dtype=True, **args):
     """Load Excel like files. (csv, xlsx, ...)"""
@@ -489,6 +542,7 @@ def df_load_excel_like(filename, preserve_dtype=True, **args):
         return pd_read_excel_keep_dtype(filename, **args)
     return pd.read_excel(filename, **args)
 
+
 import codecs
 def df_read_sjis_csv(filename, **args):
     """Read shift jis Japanese csv file.
@@ -496,6 +550,7 @@ def df_read_sjis_csv(filename, **args):
     """
     with codecs.open(filename, 'r', 'Shift-JIS', 'ignore') as file:
         return pd.read_table(file, delimiter=',', **args)
+
 
 import seaborn as sns
 def df_highlight_max(df, color='yellow', axis=1):
@@ -508,6 +563,7 @@ def df_highlight_max(df, color='yellow', axis=1):
         return [f'background-color: {color}' if v else '' for v in is_max]
     df = df.copy()
     return df.style.apply(highlight_max, axis=axis)
+
 
 def df_apply_sns_color_map(df, color='red', **kwargs):
     """Set color map to a dataframe.
@@ -524,6 +580,7 @@ def flatten_y_if_onehot(y):
     """De-one-hot y, i.e. [0,1,0,0,...] to 1 for all y."""
     return y if len(np.array(y).shape) == 1 else np.argmax(y, axis = -1)
 
+
 def get_class_distribution(y):
     """Calculate number of samples per class."""
     # y_cls can be one of [OH label, index of class, class label name string]
@@ -534,6 +591,7 @@ def get_class_distribution(y):
     sample_distribution = {cur_cls:len([one for one in y_cls if one == cur_cls]) for cur_cls in classset}
     return sample_distribution
 
+
 def get_class_distribution_list(y, num_classes):
     """Calculate number of samples per class as list"""
     dist = get_class_distribution(y)
@@ -543,6 +601,7 @@ def get_class_distribution_list(y, num_classes):
         if i in dist:
             list_dist[i] = dist[i]
     return list_dist
+
 
 def _balance_class(X, y, min_or_max, sampler_class, random_state):
     """Balance class distribution with sampler_class."""
@@ -559,15 +618,18 @@ def _balance_class(X, y, min_or_max, sampler_class, random_state):
     sampled_index = [idx[0] for idx in Xidx_resampled]
     return np.array([X[idx] for idx in sampled_index]), np.array([y[idx] for idx in sampled_index])
 
+
 def balance_class_by_over_sampling(X, y, random_state=42):
     """Balance class distribution with imbalanced-learn RandomOverSampler."""
     from imblearn.over_sampling import RandomOverSampler
     return  _balance_class(X, y, 'max', RandomOverSampler, random_state)
 
+
 def balance_class_by_under_sampling(X, y, random_state=42):
     """Balance class distribution with imbalanced-learn RandomUnderSampler."""
     from imblearn.under_sampling import RandomUnderSampler
     return  _balance_class(X, y, 'min', RandomUnderSampler, random_state)
+
 
 def df_balance_class_by_over_sampling(df, label_column, random_state=42):
     """Balance class distribution in DataFrame with imbalanced-learn RandomOverSampler."""
@@ -575,11 +637,13 @@ def df_balance_class_by_over_sampling(df, label_column, random_state=42):
     X, _ = balance_class_by_over_sampling(X, y, random_state=random_state)
     return df.iloc[X].sort_index()
 
+
 def df_balance_class_by_under_sampling(df, label_column, random_state=42):
     """Balance class distribution in DataFrame with imbalanced-learn RandomUnderSampler."""
     X, y = list(range(len(df))), list(df[label_column])
     X, _ = balance_class_by_under_sampling(X, y, random_state=random_state)
     return df.iloc[X].sort_index()
+
 
 def balance_class_by_limited_over_sampling(X, y, max_sample_per_class=None, multiply_limit=2., random_state=42):
     """Balance class distribution basically by oversampling but limited duplication.
@@ -605,6 +669,7 @@ def balance_class_by_limited_over_sampling(X, y, max_sample_per_class=None, mult
         resampled_idxes += list(idxes)
     return X[resampled_idxes], y[resampled_idxes]
 
+
 def df_balance_class_by_limited_over_sampling(df, label_column,
                                               max_sample_per_class=None, multiply_limit=2.,
                                               random_state=42):
@@ -613,6 +678,7 @@ def df_balance_class_by_limited_over_sampling(df, label_column,
     X, _ = balance_class_by_limited_over_sampling(X, y, max_sample_per_class=max_sample_per_class,
                                                   multiply_limit=multiply_limit, random_state=random_state)
     return df.iloc[X].sort_index()
+
 
 from sklearn.model_selection import train_test_split
 
@@ -633,6 +699,7 @@ def _expand_labels_from_y(y, labels):
         y = [labels.index(_y) for _y in y]
     return y, labels
 
+
 def visualize_class_balance(title, y, labels=None, sorted=False):
     y, labels = _expand_labels_from_y(y, labels)
     sample_dist_list = get_class_distribution_list(y, len(labels))
@@ -651,6 +718,7 @@ def visualize_class_balance(title, y, labels=None, sorted=False):
     ax.set_title(title)
     fig.show()
 
+
 from collections import OrderedDict
 def print_class_balance(title, y, labels=None, sorted=False):
     y, labels = _expand_labels_from_y(y, labels)
@@ -664,6 +732,7 @@ def print_class_balance(title, y, labels=None, sorted=False):
     zeroclasses = [label for i, label in enumerate(labels) if i not in distributions.keys()]
     if 0 < len(zeroclasses):
         print(' 0 sample classes:', zeroclasses)
+
 
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
@@ -689,6 +758,7 @@ def calculate_clf_metrics(y_true, y_pred, average='weighted'):
     accuracy = accuracy_score(y_true, y_pred)
     return f1, recall, precision, accuracy
 
+
 def skew_bin_clf_preds(y_pred, binary_bias=None, logger=None):
     """Apply bias to prediction results for binary classification.
     Calculated as follows.
@@ -706,6 +776,7 @@ def skew_bin_clf_preds(y_pred, binary_bias=None, logger=None):
         logger.info(f' @skew{"+" if binary_bias >= 0 else ""}{binary_bias}')
     return _preds
 
+
 def print_clf_metrics(y_true, y_pred, average='weighted', binary_bias=None, title_prefix='', logger=None):
     """Calculate and print metrics: f1/recall/precision/accuracy.
     See calculate_clf_metrics() and skew_bin_clf_preds() for more detail.
@@ -717,6 +788,7 @@ def print_clf_metrics(y_true, y_pred, average='weighted', binary_bias=None, titl
     logger = get_logger() if logger is None else logger
     logger.info('{0:s}F1/Recall/Precision/Accuracy = {1:.4f}/{2:.4f}/{3:.4f}/{4:.4f}' \
           .format(title_prefix, f1, recall, precision, acc))
+
 
 # Thanks to https://qiita.com/knknkn1162/items/be87cba14e38e2c0f656
 def plt_japanese_font_ready():
@@ -730,12 +802,14 @@ def plt_japanese_font_ready():
     """
     plt.rcParams['font.family'] = 'IPAPGothic'
 
+
 def plt_looks_good():
     """Plots will be looks good (at least to me)."""
     plt.rcParams["figure.figsize"] = [16, 10]
     plt.rcParams['font.size'] = 14
     plt.rcParams['xtick.labelsize'] = 10
     plt.rcParams['ytick.labelsize'] = 10
+
 
 def pd_display_more(max_cols=100, max_rows=500):
     """Set max cols/rows of pandas display."""
