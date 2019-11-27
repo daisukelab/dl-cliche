@@ -100,7 +100,7 @@ def soft_mean_preds(list_preds, t=0.5):
     Thanks to https://www.kaggle.com/c/severstal-steel-defect-detection/discussion/107716#620952
     """
     def _sharpen(p, t):
-        return p**t if t!= 0: else p
+        return p**t if t!= 0 else p
     preds = _sharpen(list_preds[0].copy(), t=t)
     for next_preds in list_preds[1:]:
         preds = np.add(preds, _sharpen(next_preds, t))

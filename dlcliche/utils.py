@@ -11,6 +11,7 @@ import datetime
 import pickle
 from collections import Counter
 import random
+import subprocess
 
 
 ## File utilities
@@ -101,6 +102,50 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
             if _done: break
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
+
+
+def tgz_all(base_dir, files, dest_tgz_path=None, test=True, logger=None):
+    """Make .tgz of file/folders relative from base folder.
+    This just does:
+        cd base_dir && tar czf dest_tgz_path files
+        mkdir /tmp/dest_tgz_path.stem && cd /tmp/dest_tgz_path.stem && tar xf dest_tgz_path.absolute()
+        cd base_dir && for f in files: diff /tmp/dest_tgz_path.stem/f f
+        """
+    logger = get_logger() if logger is None else logger
+    if len(files) == 0: return None
+    if dest_tgz_path is None:
+        dest_tgz_path = base_dir/Path(files[0]).with_suffix('.tgz').name
+
+    # zip them
+    commands = f'cd {base_dir} && tar czf {dest_tgz_path} {" ".join(files)}'
+    ret, out = exec_commands(commands)
+    if ret != 0:
+        logger.error(f'Failed with commands: {commands}\n"{out}"')
+        return None
+
+    # test zip
+    if test:
+        test_folder = Path('/tmp')/('dummy_'+dest_tgz_path.stem)
+        ensure_delete(test_folder)
+        commands = f'mkdir {test_folder} && cd {test_folder} && tar xf {dest_tgz_path.absolute()}'
+        ret, out = exec_commands(commands)
+        if ret != 0:
+            logger.error(f'Test failed with commands: {commands}\n"{out}"\n* {dest_tgz_path} still exists.')
+            return None
+
+        failed = False
+        for f in files:
+            commands = f'cd {base_dir} && diff {test_folder/f} {f}'
+            ret, out = exec_commands(commands)
+            if ret != 0:
+                logger.error(f'Test failed: {commands}\n{out}\n* {dest_tgz_path} still exists.')
+                failed = True
+
+        ensure_delete(test_folder)
+        if failed:
+            return None
+
+    return dest_tgz_path
 
 
 def chmod_tree_all(tree_root, mode=0o775):
@@ -234,6 +279,17 @@ def is_file_mutex_locked(filename=None):
     """Check if file mutex is locked or not."""
     filename = _file_mutex_filename(filename)
     return Path(filename).exists()
+
+
+def exec_commands(commands):
+    """Execute commands with subprocess.Popen.
+
+    Returns:
+        Return code, console output as str.
+    """
+    p = subprocess.Popen(commands, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    retval = p.wait()
+    return retval, p.stdout.read().decode() if p.stdout else ''
 
 
 ## Date utilities
@@ -552,7 +608,6 @@ def df_read_sjis_csv(filename, **args):
         return pd.read_table(file, delimiter=',', **args)
 
 
-import seaborn as sns
 def df_highlight_max(df, color='yellow', axis=1):
     """Highlight max valued cell with color.
     Thanks to https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
@@ -569,6 +624,7 @@ def df_apply_sns_color_map(df, color='red', **kwargs):
     """Set color map to a dataframe.
     Thanks to https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html
     """
+    import seaborn as sns
     cm = sns.light_palette(color, as_cmap=True, **kwargs)
     df = df.copy()
     return df.style.background_gradient(cmap=cm)

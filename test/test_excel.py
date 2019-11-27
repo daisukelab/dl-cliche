@@ -35,7 +35,7 @@ class TestExcel(unittest.TestCase):
         # Load reference
         ref_df = df_load_excel_like(file_folder/'data/ref_merge_resampled.csv').set_index('created')
         # Test
-        self.assertTrue(test_exactly_same_df('df_merge_update test', ref_df, df))
+        self.assertTrue(df_test_exactly_same('df_merge_update test', ref_df, df))
 
 if __name__ == '__main__':
     unittest.main()

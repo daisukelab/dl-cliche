@@ -1,6 +1,6 @@
 from .general import *
-from .system import deprecated
 import unittest
+import random
 
 def recursive_test_array(cls, a, b, msg=None, fn=None):
     """Test corresponding items in two array like items recursively.
@@ -21,7 +21,8 @@ def recursive_test_array(cls, a, b, msg=None, fn=None):
     else:
         fn(a, b, msg=msg)
 
-def test_exactly_same_df(title, df1, df2, fillna=0, return_diff=False):
+
+def df_test_exactly_same(title, df1, df2, fillna=0, return_diff=False):
     """Test that two pandas DataFrames are the same, and print result.
     If there's anything different, differences will be shown.
 
@@ -52,12 +53,8 @@ def test_exactly_same_df(title, df1, df2, fillna=0, return_diff=False):
         return result, diff
     return result
 
-@deprecated
-def test_exactly_the_same_df(title, df1, df2, fillna=0, return_diff=False):
-    return test_exactly_same_df(title, df1, df2, fillna=fillna, return_diff=return_diff)
 
-
-def test_exactly_same_excel(title, excel1, excel2, fillna=0, return_diff=False):
+def excel_test_exactly_same(title, excel1, excel2, fillna=0, return_diff=False):
     """Test that two Excel books are the same and print result.
     If there's anything different, differences will be shown.
 
@@ -84,3 +81,32 @@ def test_exactly_same_excel(title, excel1, excel2, fillna=0, return_diff=False):
     single_result = np.all(results)
     print(f'{title} {"Passed" if single_result else "Failed"}')
     return single_result
+
+
+def create_dummy_file(size, randomize=False, folder=Path('/tmp'), filename=None, suffix=None):
+    """Create a dummy file for testing purpose or anything.
+    Thanks to https://stackoverflow.com/questions/8816059/create-file-of-particular-size-in-python
+    """
+    assert size > 1
+    folder = Path(folder)
+    if not folder.is_dir(): return None
+
+    pathname = folder/(filename or 'foo')
+    if suffix is not None: pathname = pathname.with_suffix(suffix)
+    stem_len = len(pathname.stem)
+    for i in range(100): # retry
+        if not pathname.exists(): break
+        pathname = pathname.parent/f'{pathname.stem[:stem_len]}{i}{pathname.suffix}'
+    if pathname.exists(): return None # cannot determine pathname, all there!
+
+    f = open(pathname, 'wb')
+    if randomize is False:
+        f.seek(size - 1)
+        f.write(b'\0') # Quick solution
+    else:
+        import string
+        contents = bytes(random.choices([ord(s) for s in string.printable], k=size))
+        f.write(contents)
+    f.close()
+    return pathname
+

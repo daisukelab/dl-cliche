@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='dl-cliche',
-    version='0.1.1',
+    version='0.1.2',
     description='dl-cliche: Packaging cliche utilities',
     long_description=readme,
     long_description_content_type="text/markdown",
