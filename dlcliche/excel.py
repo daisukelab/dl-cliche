@@ -403,6 +403,14 @@ def opx_auto_adjust_column_width(worksheet, max_width=200, default_width=8, scal
         worksheet.column_dimensions[get_column_letter(i + 1)].width = column_width * scaling
 
 
+def opx_set_column_width(worksheet, col, width):
+    """Set column absolute width.
+    Args:
+        col: column number in [1..max_column]
+    """
+    worksheet.column_dimensions[get_column_letter(col)].width = width
+
+
 MAX_EXCEL_COL_WIDTH = 20
 def df_to_excel_workbook(df, wb=None, template=None, max_col_width=None, ws_name='untitled',
                          index=True, header=True, index_filter=None,
@@ -467,3 +475,21 @@ def df_to_xlsx(df, folder, stem_name, template=None, max_col_width=None,
                               view_left_col=view_left_col, copy_style=(template is not None))
     wb.save(pathname)
     return pathname
+
+
+def df_prefix_excel_error_prone_text(df, columns=None):
+    """Append single quote to the text(s) prone to cause Excel error.
+    This will append prefix (single quote) for those text cells in the DataFrame,
+    so that it won't cause error when df is converted to Excel document.
+    Supported prefixing(s):
+    - Texts starting with '='; that will 100% cause error.
+    """
+    def is_errornous(value):
+        if type(value) != str: return False
+        if len(value) == 0: return False
+        return value[0] == '=' # or value[0] == '-'
+
+    if columns is None:
+        columns = [c for c in df.columns]
+    for c in columns:
+        df[c] = df[c].apply(lambda x: "'"+x if is_errornous(x) else x)

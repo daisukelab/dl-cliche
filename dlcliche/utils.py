@@ -117,7 +117,8 @@ def tgz_all(base_dir, files, dest_tgz_path=None, test=True, logger=None):
         dest_tgz_path = base_dir/Path(files[0]).with_suffix('.tgz').name
 
     # zip them
-    commands = f'cd {base_dir} && tar czf {dest_tgz_path} {" ".join(files)}'
+    files = [str(f) for f in files]
+    commands = f'cd {base_dir} && tar czf {dest_tgz_path.absolute()} {" ".join(files)}'
     ret, out = exec_commands(commands)
     if ret != 0:
         logger.error(f'Failed with commands: {commands}\n"{out}"')
