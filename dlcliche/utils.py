@@ -23,9 +23,9 @@ def ensure_folder(folder):
 
 def ensure_delete(folder_or_file):
     anything = Path(folder_or_file)
-    if anything.is_dir():
+    if anything.is_dir() and not anything.is_symlink():
         shutil.rmtree(str(folder_or_file))
-    elif anything.exists():
+    elif anything.exists() or anything.is_symlink():
         anything.unlink()
 
 
