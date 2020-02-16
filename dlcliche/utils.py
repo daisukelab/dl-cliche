@@ -53,7 +53,7 @@ def copy_any(src, dst, symlinks=True):
 
 
 def do_list_item(func, src, *prms):
-    if isinstance(src, (list, tuple, np.ndarray)):
+    if is_array_like(src):
         result = True
         for element in src:
             result = do_list_item(func, element, *prms) and result
@@ -102,6 +102,43 @@ def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
             if _done: break
         _dup += 1
     print('Now', dest_folder, 'has', len(list(dest_folder.glob('*'))), 'files.')
+
+
+def expand_path(path):
+    """Performs `ls` like operation.
+    Lists contents in a folder if path is a folder.
+    Expands wildcard if path contains wildcard in its name part."""
+    path = Path(path)
+    d, n = path.parent, path.name
+    return list(Path(d).glob(n))
+
+
+def _copy_with_prefix(file, dest_folder, prefix, symlinks):
+    assert file.is_file()
+    new_filename = prefix + file.name
+    if symlinks:
+        symlink_file(file, dest_folder/new_filename)
+    else:
+        copy_file(file, dest_folder/new_filename)
+
+
+def copy_with_prefix(files, dest_folder, prefix, symlinks=False):
+    """Copy all files to destination folder,
+    and new file names will have prefix+original_filename."""
+    if not Path(dest_folder).is_dir():
+        raise Exception(f'{dest_folder} has to be an existing folder.')
+    # ensure files as array-like object
+    files = files if is_array_like(files) else [files]
+    # expand wild card
+    files = [
+        f.absolute() for could_be_wild in files for f in expand_path(could_be_wild)
+    ]
+    # test all files are actually file
+    for f in files:
+        if not f.is_file(): raise Exception(f'Error: {f} is not a file.')
+    # do it
+    do_list_item(_copy_with_prefix, files, dest_folder, prefix, symlinks)
+
 
 
 def tgz_all(base_dir, files, dest_tgz_path=None, test=True, logger=None):
