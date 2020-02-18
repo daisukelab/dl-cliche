@@ -186,13 +186,12 @@ from sklearn.decomposition import PCA
 
 
 def _show_2D_XXX(cls, many_dim_vector, target, title, figsize, labels):
-    many_dim_vector = many_dim_vector
     many_dim_vector_reduced = cls(n_components=2, random_state=0).fit_transform(many_dim_vector)
 
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     cax = ax.scatter(many_dim_vector_reduced[:, 0], many_dim_vector_reduced[:, 1], c=target, cmap='jet')
     ax.set_title(title)
-    cbar = fig.colorbar(cax)
+    cbar = fig.colorbar(cax, ticks=sorted(list(set(target))))
     if labels is not None:
         cbar.ax.set_yticklabels(labels)
     return fig, ax
