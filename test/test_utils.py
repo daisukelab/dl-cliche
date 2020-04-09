@@ -51,6 +51,25 @@ class TestUtils(unittest.TestCase):
         df = df_select_by_keyword(test_df, 'Little', search_columns=['one'])
         self.assertTrue(len(df) == 0)
 
+        # df_str_replace
+        df = pd.read_csv('test/data/test_df_op.csv')
+        df_str_replace(df, 'ABC', 'HIJ')
+        df_str_replace(df, '1', '8')
+        df_str_replace(df, '字', '句')
+        df_str_replace(df, '.', '-', regex=False)
+        df.to_csv('test/data/__test_df_op.csv', index=None)
+        pd.read_csv('test/data/ref1_test_df_op.csv').to_csv('test/data/_1_test_df_op.csv', index=None)
+        self.assertTrue(df.equals(pd.read_csv('test/data/ref1_test_df_op.csv')))
+
+        df = pd.read_csv('test/data/test_df_op.csv')
+        df_str_replace(df, '[Bb]', 'H')
+        df_str_replace(df, '4\\.56', '7.77')
+        df_str_replace(df, 'def123\\,\\.', 'def123-/')
+        df_str_replace(df, '[文字]', '句')
+        df.to_csv('test/data/__test_df_op.csv', index=None)
+        pd.read_csv('test/data/ref2_test_df_op.csv').to_csv('test/data/_2_test_df_op.csv', index=None)
+        self.assertTrue(df.equals(pd.read_csv('test/data/ref2_test_df_op.csv')))
+
     def test_file_lock(self):
         lock_file_mutex()
         self.assertTrue(is_file_mutex_locked())
@@ -90,6 +109,21 @@ class TestUtils(unittest.TestCase):
         self.assertAlmostEqual(recall, 0.5)
         self.assertAlmostEqual(precision, 1.0)
         self.assertAlmostEqual(acc, 0.6666666666666666)
+
+    def test_read_yaml(self):
+        data = read_yaml('test/data/yaml_test.yaml')
+        sys.stdout.write(str(data))
+        self.assertEqual(data['train_data'], '/data/train')
+        self.assertEqual(data['work_folder'], 'tmp')
+        self.assertEqual(len(data['src_suffixes']), 3)
+        self.assertEqual(data['src_suffixes'][0], '.bmp')
+        self.assertEqual(data['n_epochs'], 100)
+        self.assertEqual(data['valid_pct'], 0.2)
+        self.assertEqual(len(data['lr']), 3)
+        self.assertEqual(data['lr'][0], 0.003)
+        self.assertEqual(data['train_tfm'], None)
+        data = read_yaml('test/data/yaml_test.yaml', fix_none=False)
+        self.assertEqual(data['train_tfm'], 'None')
 
 
 if __name__ == '__main__':

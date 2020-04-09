@@ -1,0 +1,5 @@
+index,Column1,列2,Int3,Float4,Str5
+0,"ABCabc123,.=",漢字文字,123,1.23,"ABCabc123,.="
+1,"ABCdef123,.=",文字漢字,456,4.56,"ABCabc4.56,.="
+2,"DEFabc123,.=",漢字文字,123,1.23,"ABCabc123,.="
+3,"DEFdef123,.=",文字漢字,789,7.89,"ABCabc123,.="

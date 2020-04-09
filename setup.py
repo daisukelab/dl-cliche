@@ -7,13 +7,13 @@ with open("README.md", "r") as f:
 
 setup(
     name='dl-cliche',
-    version='0.1.4',
+    version='0.1.5',
     description='dl-cliche: Packaging cliche utilities',
     long_description=readme,
     long_description_content_type="text/markdown",
     author='daisukelab',
     author_email='contact.daisukelab@gmail.com',
-    install_requires=['numpy', 'pandas', 'matplotlib', 'tqdm',
+    install_requires=['numpy', 'pandas', 'matplotlib', 'tqdm', 'pyyaml',
                       'easydict', 'imbalanced-learn', 'tables', 'openpyxl'],
     url='https://github.com/daisukelab/dl-cliche',
     license=license,

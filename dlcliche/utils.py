@@ -12,6 +12,7 @@ import pickle
 from collections import Counter
 import random
 import subprocess
+import yaml
 
 
 ## File utilities
@@ -256,6 +257,23 @@ def load_pkl(filename):
     """Load pickle object from file."""
     with open(filename, 'rb') as f:
         return pickle.load(f)
+
+
+def read_yaml(file_name, fix_none=True):
+    """Read yaml file and set None if str is 'None'."""
+    def fix_dict_none(dict_):
+        """Fix dict item 'None' as None"""
+        for k in dict_:
+            if isinstance(dict_[k], dict):
+                fix_dict_none(dict_[k])
+            elif isinstance(dict_[k], str) and dict_[k] == 'None':
+                dict_[k] = None
+
+    with open(file_name) as f:
+        yaml_data = yaml.safe_load(f)
+    if fix_none:
+        fix_dict_none(yaml_data)
+    return yaml_data
 
 
 ## Log utilities
@@ -580,9 +598,14 @@ def df_mask_by_str_conditions(df, conditions):
 
 
 def df_str_replace(df, from_strs, to_str, regex=True):
-    """Apply str.replace to entire DataFrame inplace."""
-    for i, row in df.iterrows():
-        df.ix[i] = df.ix[i].str.replace(from_strs, to_str, regex=regex)
+    """Apply str.replace to entire DataFrame inplace.
+
+    - All string columns will be applied. (dtype == 'objet')
+    - All other dtype columns will not be applied.
+    """
+    for c in df.columns:
+        if df[c].dtype != 'object': continue
+        df[c] = df[c].str.replace(from_strs, to_str, regex=regex)
 
 
 def df_cell_str_replace(df, from_str, to_str):
@@ -953,12 +976,12 @@ def plot_confusion_matrix(y_test, y_pred, classes,
     np.set_printoptions(**po)
 
 
-def deterministic_everything(seed=42, pytorch=True, torch_benchmark=True, tf=False):
+def deterministic_everything(seed=42, pytorch=True, tf=False):
     """Set pseudo random everything deterministic. a.k.a. `seed_everything`
     Universal to major frameworks.
 
     Thanks to https://docs.fast.ai/dev/test.html#getting-reproducible-results
-    Thanks to https://github.com/pytorch/pytorch/issues/11278
+    Thanks to https://pytorch.org/docs/stable/notes/randomness.html
     """
 
     # Python RNG
@@ -974,10 +997,7 @@ def deterministic_everything(seed=42, pytorch=True, torch_benchmark=True, tf=Fal
         import torch
         torch.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
-        if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
-
-        # Pytorch benchmark
-        if torch_benchmark: torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.benchmark = False
 
     # TensorFlow RNG
     if tf:

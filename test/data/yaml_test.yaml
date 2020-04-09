@@ -1,0 +1,7 @@
+train_data: /data/train
+work_folder: tmp
+valid_pct: 0.2
+src_suffixes: ['.bmp', '.jpg', '.png']
+n_epochs: 100
+lr: [0.003, 0.0001, 0.0003]
+train_tfm: None
