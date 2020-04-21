@@ -1,6 +1,7 @@
 import unittest
 from dlcliche.utils import *
 
+
 class TestUtils(unittest.TestCase):
 
     def setUp(self):

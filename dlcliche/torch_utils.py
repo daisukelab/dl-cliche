@@ -1,4 +1,5 @@
 from .utils import *
+import torch.nn as nn
 
 
 class LossFlooding(nn.Module):
