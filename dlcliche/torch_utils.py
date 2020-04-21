@@ -1,5 +1,26 @@
 from .utils import *
 
+
+class LossFlooding(nn.Module):
+    """Flooding wrapper.
+
+    Example:
+        >>> # Wrap CrossEntropyLoss with Flooding.
+        >>> criteria = LossFlooding(nn.CrossEntropyLoss(), my_flooding_b)
+
+    .. _Do We Need Zero Training Loss After Achieving Zero Training Error?: https://arxiv.org/abs/2002.08709
+    """
+    def __init__(self, criteria, b):
+        super().__init__()
+        self.criteria = criteria
+        self.b = b
+
+    def forward(self, input, target):
+        loss = self.criteria(input, target)
+        loss = (loss - self.b).abs() + self.b
+        return loss
+
+
 def torch_show_trainable(model):
     """
     Print 'Trainable' or 'Frozen' for all elements in a model.
@@ -8,7 +29,12 @@ def torch_show_trainable(model):
     for name, child in model.named_children():
         for param in child.parameters():
             print('Trainable' if param.requires_grad else 'Frozen', '@', str(child).replace('\n', '')[:80])
-        pytorch_show_trainable(child)
+        torch_show_trainable(child)
+
+
+def torch_set_trainable(model, flag):
+    for param in model.parameters():
+        param.requires_grad = flag
 
 
 def to_raw_image(torch_img, uint8=False, denorm=True):

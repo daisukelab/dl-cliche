@@ -70,11 +70,22 @@ class TestUtils(unittest.TestCase):
         pd.read_csv('test/data/ref2_test_df_op.csv').to_csv('test/data/_2_test_df_op.csv', index=None)
         self.assertTrue(df.equals(pd.read_csv('test/data/ref2_test_df_op.csv')))
 
+        ensure_delete('test/data/__test_df_op.csv')
+        ensure_delete('test/data/_1_test_df_op.csv')
+        ensure_delete('test/data/_2_test_df_op.csv')
+
     def test_file_lock(self):
         lock_file_mutex()
         self.assertTrue(is_file_mutex_locked())
         release_file_mutex()
         self.assertFalse(is_file_mutex_locked())
+    
+    def test_int_from_text(self):
+        self.assertEqual(int_from_text('abc123 456'), 123)
+        self.assertEqual(int_from_text('abc 12.3 456'), 12)
+        self.assertEqual(int_from_text('abc .12.3 456'), 12)
+        self.assertEqual(int_from_text('abc def', 5), 5)
+        self.assertEqual(int_from_text('abc def'), 0)
 
     def test_date(self):
         self.assertEqual(str_to_date('2010/1/23'), datetime.date(2010, 1, 23))

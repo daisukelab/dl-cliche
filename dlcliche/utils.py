@@ -12,6 +12,7 @@ from collections import Counter
 import random
 import subprocess
 import yaml
+import re
 
 
 ## File utilities
@@ -501,7 +502,7 @@ def unicode_visible_width(unistr):
 def int_from_text(text, default=0):
     """Extract leftmost int number found in given text."""
 
-    g = re.search('\d+', str(text))
+    g = re.search(r'\d+', str(text))
     return default if g is None else int(g.group(0))
 
 
