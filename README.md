@@ -1,3 +1,8 @@
+[![PyPI](https://img.shields.io/pypi/v/dl-cliche)](https://pypi.org/project/dl-cliche/)
+![PyPI - License](https://img.shields.io/pypi/l/dl-cliche)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dl-cliche)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/dl-cliche.svg)](https://pypistats.org/packages/dl-cliche)
+
 # dl-cliche: Packaging cliche utilities
 
 This is a python module started to package utility functions that are locally made but used everyday.
@@ -43,6 +48,16 @@ Then you can simply start your code that uses numpy, pandas or utility like:
 from dlcliche.notebook import *
 from dlcliche.utils import *
 ```
+
+## Warnings to ignore
+
+Type followings where you want to suppress warnings later on.
+
+```python
+import warnings; simply_ignore(warnings)
+```
+
+Still need to import warnings, `simply_ignore` wraps what to do then.
 
 ## Documents
 

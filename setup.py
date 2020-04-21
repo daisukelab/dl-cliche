@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+from dlcliche import __version__
 
 with open("README.md", "r") as f:
     readme = f.read()
 
 setup(
     name='dl-cliche',
-    version='0.1.5',
+    version=__version__,
     description='dl-cliche: Packaging cliche utilities',
     long_description=readme,
     long_description_content_type="text/markdown",

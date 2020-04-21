@@ -1,5 +1,4 @@
 from .general import *
-from .ignore_warnings import *
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -497,6 +496,13 @@ import unicodedata
 def unicode_visible_width(unistr):
     """Returns the number of printed characters in a Unicode string."""
     return sum([1 if unicodedata.east_asian_width(char) in ['N', 'Na'] else 2 for char in unistr])
+
+
+def int_from_text(text, default=0):
+    """Extract leftmost int number found in given text."""
+
+    g = re.search('\d+', str(text))
+    return default if g is None else int(g.group(0))
 
 
 ## Pandas utilities
@@ -1003,4 +1009,13 @@ def deterministic_everything(seed=42, pytorch=True, tf=False):
     if tf:
         import tensorflow as tf
         tf.set_random_seed(seed)
+
+
+def simply_ignore(warnings_):
+    """Set warnings to ignore all.
+
+    Usage:
+        import warnings; simply_ignore(warnings)
+    """
+    warnings_.simplefilter('ignore')
 

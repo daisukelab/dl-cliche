@@ -4,6 +4,7 @@ from .notebook import running_in_notebook
 import cv2
 import tqdm
 import math
+import random
 from PIL import Image
 from multiprocessing import Pool
 
@@ -93,6 +94,144 @@ def convert_mono_to_jpg(fromfile, tofile):
     img = Image.fromarray(img)
     tofile = Path(tofile)
     img.save(tofile.with_suffix('.jpg'), 'JPEG', quality=100)
+
+
+def pil_crop(pil_img, crop_size, random_crop=True):
+    """Crop PIL image, randomly or from its center."""
+
+    w, h = pil_img.size
+    if is_array_like(crop_size):
+        crop_size_w, crop_size_h = crop_size
+    else:
+        crop_size_w, crop_size_h = crop_size, crop_size
+
+    if random_crop:
+        x = random.randint(0, np.maximum(0, w - crop_size_w))
+        y = random.randint(0, np.maximum(0, h - crop_size_h))
+    else:
+        x = (w - crop_size_w) // 2
+        y = (h - crop_size_h) // 2
+
+    return pil_img.crop((x, y, x+crop_size_w, y+crop_size_h))
+
+
+def pil_translate_fill_mirror(img, dx, dy):
+    """Translate (shift) PIL image and fill empty part with mirror of the image."""
+
+    w, h = img.size
+    four = Image.new(img.mode, (w * 2, h * 2))
+    # mirror along x axis
+    zy = 0 if dy >= 0 else h
+    zxs = [w, 0] if dx >= 0 else [0, w]
+    four.paste(img, (zxs[0], zy, zxs[0] + w, zy + h))
+    four.paste(img.transpose(Image.FLIP_LEFT_RIGHT), (zxs[1], zy, zxs[1] + w, zy + h))
+    # mirror along y axis
+    zys = [0, h] if dy >= 0 else [h, 0]
+    (four.paste(four.crop((0, zys[0], w * 2, zys[0] + h))
+                .transpose(Image.FLIP_TOP_BOTTOM), (0, zys[1], w * 2,  zys[1] + h)))
+    # crop translated copy
+    zx, zy = int(dx * w), int(dy * h)
+    zx, zy = -zx if dx < 0 else w - zx, h + zy if dy < 0 else zy
+    return four.crop((zx, zy, zx + w, zy + h))
+
+
+def plt_tiled_imshow(imgs, titles=None, n_cols=5, axis=True):
+    """Plot images in tiled fashion."""
+
+    n_row = (len(imgs) + n_cols - 1) // n_cols
+    fig = plt.figure(figsize=(15, 3 * n_row))
+    for row in range(n_row):
+        for col in range(5):
+            i = row * n_cols + col
+            if i >= len(imgs): break
+
+            plt.subplot(n_row, n_cols, i+1)
+            x = imgs[i]
+            if x.shape[-1] == 1: x = x.reshape(x.shape[:-1])
+            plt.imshow(x)
+            if titles is not None:
+                plt.title(titles[i])
+            if not axis:
+                plt.axis('off')
+    return fig
+
+
+def preprocess_images(files, to_folder, size=None, mode=None, suffix='.png',
+                      pre_crop_rect=None, prepend=True, parent_name=True, verbose=False,
+                      skip_creation=False):
+    """Preprocess image files and put them in a folder with prepended serial number.
+
+    This will repeat for all files:
+        load image -> pre_crop_rect -> resize -> convert mode -> save to folder.
+
+    File name examples:
+        1_foo_bar.png: When original file name is bar.png, prepend=True, parent_name=True.
+        bar.png: prepend=False, parent_name=False.
+        55_bar.png: prepend=True, parent_name=False. Let's go enjoy the music there...
+
+    Args:
+        files (list(str or Path)): File path names.
+        to_folder (str or Path): Destination folder to save images.
+        size (int or (int, int)): Final size of image.
+            One int value for square image, or (w, h) tuple.
+        mode (str): 'RGB' for RGB, 'L' for monochrome, or anything PIL.Image accepts.
+        suffix (str): '.png' by default, Set any suffix which PIL.Image accepts.
+        prepend (bool): If True, prepend serial unique number in the destination folder
+            to the copied filename.
+        parent_name (bool): If True, prepend parent folder name to the copied filename.
+        verbose (bool): Prints what's done if:
+            True: File name and sizes.
+            False: Only serial numbers.
+            None: Nothing.
+        skip_creation: If True, file will not be created.
+            It assumes files starting from serial number 1, and checks all files there.
+
+    Returns:
+        List of new file Path objects as path names.
+    """
+
+    to_folder = Path(to_folder)
+    ensure_folder(to_folder)
+    # get last existing number in to_folder, starting id = that + 1.
+    cur_id = max([0] + [int_from_text(f.name) for f in to_folder.glob('*'+suffix)]) + 1
+    if skip_creation:
+        cur_id = 1
+    # (w, h) for resize
+    if size is not None:
+        w, h = size if is_array_like(size) else (size, size)
+    # loop over files
+    new_names = []
+    for i, f in enumerate(files):
+        f = Path(f)
+        if not f.is_file():
+            raise Exception(f'Sample "{f}" doesn\'t exist.')
+        new_file_name = ((f'{cur_id + i}_' if prepend else '') +
+                         (f'{f.parent.name}_' if parent_name else '') +
+                         f.stem + suffix)
+        new_file_name = to_folder/new_file_name
+        new_names.append(new_file_name)
+        if skip_creation:
+            assert new_file_name.exists(), f'{new_file_name} Not Found...'
+            continue
+
+        img = Image.open(f)
+        if pre_crop_rect is not None:
+            img = img.crop(pre_crop_rect)
+        if size is not None:
+            img = img.resize((w, h))
+        if mode is not None:
+            img = img.convert(mode)
+        img.save(new_file_name)
+        if verbose:
+            print(f' {f.name} -> {to_folder.name}/{new_file_name.name}' +
+                  ('' if pre_crop_rect is None else f'pre_crop({pre_crop_rect}) -> ') +
+                  ('' if size is None else f' ({w}, {h})'))
+        else:
+            if verbose is not None:
+                print(f' {cur_id + i}', end='')
+    if verbose is not None: print()
+    return new_names
+
 
 # Borrowing from fast.ai course notebook
 from matplotlib import patches, patheffects
