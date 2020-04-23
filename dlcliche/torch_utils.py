@@ -4,12 +4,21 @@ import torch
 import torch.nn as nn
 
 
+def torch_flooding(loss, b):
+    """Flooding function."""
+    return (loss - b).abs() + b
+
+
 class LossFlooding(nn.Module):
     """Flooding wrapper.
 
     Example:
         >>> # Wrap CrossEntropyLoss with Flooding.
-        >>> criteria = LossFlooding(nn.CrossEntropyLoss(), my_flooding_b)
+        >>> criterion = LossFlooding(nn.CrossEntropyLoss(), my_flooding_b)
+        >>> # For training loss.
+        >>> loss = criterion(output, target, train=True)
+        >>> # For validation loss, flooding will not be applied.
+        >>> loss = criterion(output, target, train=False)
 
     .. _Do We Need Zero Training Loss After Achieving Zero Training Error?: https://arxiv.org/abs/2002.08709
     """
@@ -18,9 +27,10 @@ class LossFlooding(nn.Module):
         self.criteria = criteria
         self.b = b
 
-    def forward(self, input, target):
+    def forward(self, input, target, train=True):
         loss = self.criteria(input, target)
-        loss = (loss - self.b).abs() + self.b
+        if train: # apply only training phase
+            loss = torch_flooding(loss, self.b)
         return loss
 
 
@@ -29,13 +39,14 @@ class IntraBatchMixup():
     Works with every single batch, requires small changes with training process.
 
     Example:
+        >>> # replace loss function instantiation like this.
         >>> batch_mixer = IntraBatchMixup(nn.CrossEntropyLoss(), alpha=your_alpha)
-        >>> # training
+        >>> # training example.
         >>> for inputs, labels in train_loader:
         >>>     inputs, stacked_labels = batch_mixer.transform(inputs, labels, train=True)
         >>>     outputs = model(inputs)
         >>>     loss = batch_mixer.criterion(outputs, stacked_labels)
-        >>> # validation
+        >>> # validation example.
         >>> for inputs, labels in val_loader:
         >>>     inputs, stacked_labels = batch_mixer.transform(inputs, labels, train=False)
         >>>     outputs = model(inputs)
@@ -64,11 +75,11 @@ class IntraBatchMixup():
         lambd = inputs.new(lambd)
         shuffle = torch.randperm(targets.size(0)).to(inputs.device)
 
-        x1, y1 = inputs[shuffle], targets[shuffle]
-        out_shape = [lambd.size(0)] + [1 for _ in range(len(x1.shape) - 1)]
+        counterpart_inputs, counterpart_targets = inputs[shuffle], targets[shuffle]
+        out_shape = [lambd.size(0)] + [1 for _ in range(len(counterpart_inputs.shape) - 1)]
 
-        mixed_inputs = (inputs * lambd.view(out_shape) + x1 * (1-lambd).view(out_shape))
-        stacked_targets = [targets, y1, lambd]
+        mixed_inputs = (inputs * lambd.view(out_shape) + counterpart_inputs * (1-lambd).view(out_shape))
+        stacked_targets = [targets, counterpart_targets, lambd]
         return mixed_inputs, stacked_targets
 
     def criterion(self, outputs, stacked_targets, outputs2=None):
@@ -92,9 +103,9 @@ class _IntraBatchMixupLoss():
         setattr(self.criterion, 'reduction', 'none')
 
     def __call__(self, outputs, stacked_targets, outputs2=None):
-        org_targets, counter_targets, lambd = stacked_targets
+        org_targets, counterpart_targets, lambd = stacked_targets
         loss1 = self.criterion(outputs, org_targets.long())
-        loss2 = self.criterion(outputs if outputs2 is None else outputs2, counter_targets.long())
+        loss2 = self.criterion(outputs if outputs2 is None else outputs2, counterpart_targets.long())
         in_shape = [lambd.size(0)] + [1 for _ in range(len(outputs.shape) - 1)]
         lambd = lambd.view(in_shape)
         d = loss1 * lambd + loss2 * (1-lambd)

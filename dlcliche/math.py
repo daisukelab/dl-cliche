@@ -36,6 +36,14 @@ def np_softmax(z):
     return e_x / div
 
 
+def np_flooding(loss, b):
+    """Flooding function for numpy.
+
+    .. _Do We Need Zero Training Loss After Achieving Zero Training Error?: https://arxiv.org/abs/2002.08709
+    """
+    return np.abs(loss - b) + b
+
+
 def n_by_m_distances(n, m, how='cosine'):
     """
     Calculate distances for all combinations of vectors.

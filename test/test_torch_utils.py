@@ -32,14 +32,20 @@ class TestTorchUtils(unittest.TestCase):
 
         b = 0.8
         crit = LossFlooding(nn.CrossEntropyLoss(), b)
-        flooded = crit(preds, y_true)
+        flooded = crit(preds, y_true, train=True)
         self.assertTrue((flooded - b)  == (b - normal))
 
         b = 0.7
         crit = LossFlooding(nn.CrossEntropyLoss(), b)
-        flooded = crit(preds, y_true)
+        flooded = crit(preds, y_true, train=True)
         self.assertTrue(flooded == normal)
         self.assertTrue(b < normal)
+
+        b = 0.8
+        crit = LossFlooding(nn.CrossEntropyLoss(), b)
+        flooded = crit(preds, y_true, train=False)
+        self.assertTrue(flooded == normal)
+        self.assertTrue(b > normal)
 
     def test_mixup(self):
         N, C, H, W = 32, 3, 5, 10
