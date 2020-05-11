@@ -63,16 +63,18 @@ class IntraBatchMixup():
         self.loss_func = _IntraBatchMixupLoss(criterion)
         self.alpha = alpha
 
-    def transform(self, inputs, targets, train:bool):
-        "Applies mixup to `inputs` and `targets` if `train`."
+    @staticmethod
+    def get_lambda(alpha, size, attr_ref_var):
+        lambd = np.random.beta(alpha, alpha, size)
+        lambd = np.concatenate([lambd[:,None], 1-lambd[:,None]], 1).max(1)
+        return attr_ref_var.new_tensor(lambd)
 
+    def transform(self, inputs, targets, train:bool):
         if not train or self.alpha == 0.0:
             return inputs, [targets, targets,
                             torch.ones((targets.size(0)), dtype=torch.float).to(inputs.device)]
 
-        lambd = np.random.beta(self.alpha, self.alpha, targets.size(0))
-        lambd = np.concatenate([lambd[:,None], 1-lambd[:,None]], 1).max(1)
-        lambd = inputs.new(lambd)
+        lambd = IntraBatchMixup.get_lambda(self.alpha, targets.size(0), inputs)
         shuffle = torch.randperm(targets.size(0)).to(inputs.device)
 
         counterpart_inputs, counterpart_targets = inputs[shuffle], targets[shuffle]
@@ -114,20 +116,22 @@ class _IntraBatchMixupLoss():
         return d
 
 
-def torch_show_trainable(model):
-    """
-    Print 'Trainable' or 'Frozen' for all elements in a model.
-    Thanks to https://discuss.pytorch.org/t/how-the-pytorch-freeze-network-in-some-layers-only-the-rest-of-the-training/7088/15
-    """
-    for name, child in model.named_children():
-        for param in child.parameters():
-            print('Trainable' if param.requires_grad else 'Frozen', '@', str(child).replace('\n', '')[:80])
-        torch_show_trainable(child)
+def torch_show_model(model, only_trainable=False):
+    skip_count = 0
+    if only_trainable:
+        print('Trainable parameters:')
+    for name, param in model.named_parameters():
+        if only_trainable and (not param.requires_grad):
+            skip_count += 1; continue
+        print(name, list(param.shape), '' if param.requires_grad else '*frosen')
+    if skip_count > 0:
+        print(f'(and more {skip_count} frozen paramters)')
 
 
-def torch_set_trainable(model, flag):
-    for param in model.parameters():
-        param.requires_grad = flag
+def torch_set_trainable(model, trainable, pattern='.+'):
+    for name, param in model.named_parameters():
+        if re.search(pattern, name):
+            param.requires_grad = trainable
 
 
 def to_raw_image(torch_img, uint8=False, denorm=True):
