@@ -80,6 +80,27 @@ class TestTorchUtils(unittest.TestCase):
                 self.assertTrue(np.all(calculated_inputs.numpy() == tfmed_inputs.numpy()))
                 self.assertTrue(np.all(calculated_loss.numpy() == loss.numpy())), f'{calculated_loss} != {loss}'
 
+    def test_label_smoothing(self):
+        logits = torch.Tensor([[0.3529, 0.8618, 0.8859, 0.9957, 0.5551, 0.8189],
+                               [0.0897, 0.1646, 0.7691, 0.6098, 0.6384, 0.7858],
+                               [0.8170, 0.7350, 0.3148, 0.3416, 0.6053, 0.9115],
+                               [0.4621, 0.3512, 0.7762, 0.8315, 0.4907, 0.3521]])
+        targets = torch.Tensor([1, 0, 5, 5]).to(torch.long)
+        refs = [1.8686657, 1.8686657, 1.8635569, 7.4337926]
+        answers = [crit(logits, targets).numpy() for crit in [nn.CrossEntropyLoss(),
+                                                              LabelSmoothing(smoothing=0.0),
+                                                              LabelSmoothing(smoothing=0.1),
+                                                              LabelSmoothing(smoothing=0.2, reduction='sum')]]
+        self.assertTrue(np.allclose(refs, answers))
+
+        refs = [1.9255728, 1.9255728, 1.9578586, [1.7212944, 1.5842859, 1.9641012]]
+        answers = [crit(logits, targets).numpy() for crit in [nn.CrossEntropyLoss(ignore_index=1),
+                                                              LabelSmoothing(smoothing=0.0, ignore_index=1),
+                                                              LabelSmoothing(smoothing=0.1, ignore_index=5),
+                                                              LabelSmoothing(smoothing=0.2, ignore_index=0, reduction='none')]]
+        self.assertTrue(np.allclose(refs[:3], answers[:3]))
+        self.assertTrue(np.allclose(refs[3], answers[3]))
+
 
 if __name__ == '__main__':
     unittest.main()

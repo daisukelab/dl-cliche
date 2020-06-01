@@ -2,6 +2,7 @@ from .utils import *
 import numpy as np
 import torch
 import torch.nn as nn
+from .external.smoothing import LabelSmoothing
 
 
 def torch_flooding(loss, b):
