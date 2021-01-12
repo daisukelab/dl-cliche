@@ -64,5 +64,45 @@ class TestBigH5Array(unittest.TestCase):
 
         print('')
 
+    def test_H5VarLenStorage(self):
+        testdata1 = [np.random.rand(3, np.random.randint(1, 10)) for _ in range(20)]
+        testdata2 = [np.random.rand(4, 5, np.random.randint(1, 10)) for _ in range(30)]
+        testdata3 = ['asds', 'reqte', 'zxvcasdf']
+
+        # write test data
+        h5 = H5VarLenStorage('/tmp/test.h5', 'w', verbose=True)
+
+        h5.set_attr('attr1', 44100)
+        h5.set_attr('attr2', 'test variable length like')
+
+        h5.set_dataset('var1', len(testdata1), testdata1[0])
+        for t in testdata1:
+            h5.put('var1', t)
+        h5.set_dataset('var2',  len(testdata2), testdata2[0])
+        for t in testdata2:
+            h5.put('var2', t)
+        h5.set_dataset('var3', len(testdata3), testdata3[0])
+        for t in testdata3:
+            h5.put('var3', t)
+
+        print(h5)
+        h5.close()
+
+        # test to read written .h5 database.
+        with H5VarLenStorage('/tmp/test.h5', 'r') as r5:
+            self.assertTrue(r5.attr('attr1') == 44100)
+            self.assertTrue(r5.attr('attr2') ==  'test variable length like')
+
+            for i, t in enumerate(testdata1):
+                # print(r5.get('var1', i))
+                self.assertTrue(np.allclose(r5.get('var1', i), t))
+            for i, t in enumerate(testdata2):
+                print(r5.get('var2', i).shape, end=', ')
+                self.assertTrue(np.all(r5.get('var2', i) == t))
+            for i, t in enumerate(testdata3):
+                self.assertTrue(r5.get('var3', i) == t)
+
+            r5.close()
+
 if __name__ == '__main__':
     unittest.main()

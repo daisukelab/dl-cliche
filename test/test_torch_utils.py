@@ -80,6 +80,32 @@ class TestTorchUtils(unittest.TestCase):
                 self.assertTrue(np.all(calculated_inputs.numpy() == tfmed_inputs.numpy()))
                 self.assertTrue(np.all(calculated_loss.numpy() == loss.numpy())), f'{calculated_loss} != {loss}'
 
+    def test_mixup_bce(self):
+        N, C, H, W, CLS = 32, 3, 5, 10, 7
+        # test data and fake preds
+        inputs = np.arange(N * C * H * W).reshape((N, C, H, W)).astype(np.float)
+        inputs = torch.tensor(inputs)
+        targets = [[1.0 if np.random.rand() > 0.5 else 0.0 for _ in range(CLS)] for _ in range(N)] # one-hot multi label
+        targets = torch.tensor(targets).to(inputs.dtype)
+        preds = np.linspace(1.0, 0.0, num=CLS)
+        preds = [np.roll(preds, i) for i in range(N)]
+        preds = torch.tensor(preds).to(inputs.dtype)
+        # test both train/valid
+        for train, alpha in zip([True, True, True, False], [1.0, 0.5, 0.0, 0.0]):
+            for _ in range(1000):
+                batch_mixer = IntraBatchMixupBCE(alpha=alpha)
+                mixed_inputs, mixed_targets = batch_mixer.transform(inputs, targets, train=train)
+
+                if alpha > 0.0:
+                    src_inputs2 = inputs[batch_mixer.last_shuffle]
+                    src_targets2 = targets[batch_mixer.last_shuffle]
+                    lambd = batch_mixer.last_lambd.view([N, 1])
+                    calculated_mixed_targets = lambd * targets + (1.0 - lambd) * src_targets2
+                else:
+                    calculated_mixed_targets = targets
+                
+                self.assertTrue(np.all(calculated_mixed_targets.numpy() == mixed_targets.numpy()))
+
     def test_label_smoothing(self):
         logits = torch.Tensor([[0.3529, 0.8618, 0.8859, 0.9957, 0.5551, 0.8189],
                                [0.0897, 0.1646, 0.7691, 0.6098, 0.6384, 0.7858],

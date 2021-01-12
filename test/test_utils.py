@@ -137,6 +137,36 @@ class TestUtils(unittest.TestCase):
         data = read_yaml('test/data/yaml_test.yaml', fix_none=False)
         self.assertEqual(data['train_tfm'], 'None')
 
+    def test_sure_split(self):
+        # TODO test -> is_all_class_same(y_a, y_b, delimiter=None)
+
+        # single label: str
+        y = np.random.choice(list('abcdefghijklmnopqrstuvwxyz'), size=990)
+        y = np.append(y, list('##########'))
+        X = np.zeros((1000, 10))
+        X1, X2, y1, y2 = train_test_sure_split(X, y, test_size=0.1, debug=True)
+        self.assertFalse(X1 is None)
+
+        # single label: number
+        # multi label: str-label
+        # multi label: int-str-label
+        # multi label: 2-d table
+        y = np.random.choice([0, 1], size=1000 * 10).reshape(-1, 10)
+        y[:, 9] = 0
+        y[990:1000, :] = 0
+        y[990:1000, 9] = 1
+        X = np.zeros((1000, 10))
+        # y[:5], y[-5:]
+        X1, X2, y1, y2 = train_test_sure_split(X, y, debug=True,  test_size=0.01, return_last=True)
+        self.assertTrue(X1 is not None)
+
+        X1, X2, y1, y2 = train_test_sure_split(X, y, debug=True,  test_size=0.001, return_last=False)
+        self.assertTrue(y2 is None)
+        X1, X2, y1, y2 = train_test_sure_split(X, y, debug=True,  test_size=0.001, return_last=True)
+        self.assertEqual(y2.sum(axis=0)[9], 0)
+
+        # TODO test > train_test_sure_split(X, y, n_attempt=100, return_last=False, **kwargs):
+        # TODO stratify=y  especially for 2-d table
 
 if __name__ == '__main__':
     unittest.main()

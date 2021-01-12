@@ -141,6 +141,28 @@ def copy_with_prefix(files, dest_folder, prefix, symlinks=False):
     do_list_item(_copy_with_prefix, files, dest_folder, prefix, symlinks)
 
 
+def load_yaml_config(path_to_config, default):
+    """Load yaml configuration, or create default.
+
+    Args:
+        path_to_config (str or Path): path to the config file.
+        default (dict): default values.
+    Returns:
+        config (EasyDict): read/default configuration key/values.
+    """
+    try:
+        assert path_to_config.is_file()
+        with open(path_to_config) as f:
+            yaml_contents = yaml.safe_load(f)
+    except:
+        # cannot read, create one
+        yaml_contents = default
+        with open(path_to_config, 'w') as f:
+            f.write(yaml.dump(default))
+        print(f' {path_to_config} cannot be read correctly, then created with default contents. Pls edit.')
+    cfg = EasyDict(yaml_contents)
+    return cfg
+
 
 def tgz_all(base_dir, files, dest_tgz_path=None, test=True, logger=None):
     """Make .tgz of file/folders relative from base folder.
@@ -772,7 +794,7 @@ def df_balance_class_by_under_sampling(df, label_column, random_state=42):
 def balance_class_by_limited_over_sampling(X, y, max_sample_per_class=None, multiply_limit=2., random_state=42):
     """Balance class distribution basically by oversampling but limited duplication.
 
-    # Arguments
+    Args:
         X: Data samples, only size of samples is used here.
         y: Class labels to be balanced.
         max_sample_per_class: Number of maximum samples per class, large class will be limitd to this number.
@@ -807,11 +829,61 @@ def df_balance_class_by_limited_over_sampling(df, label_column,
 from sklearn.model_selection import train_test_split
 
 def subsample_stratified(X, y, size=0.1):
-    """
-    Stratified subsampling.
-    """
+    """Stratified subsampling."""
     _, X_test, _, y_test = train_test_split(X, y, test_size=size, stratify=y)
     return X_test, y_test
+
+
+def all_same_classes(y_a, y_b, delimiter=None):
+    """Test if all classes in y_a is also in y_b or not.
+    If y_a is a single dimension array, test as single labeled.
+    If y_a is a two dimension array, test as multi-labeled.
+
+    Args:
+        y_a: One list of labels.
+        y_b: Another list of labels.
+        delimiter: Set a character if multi-label text is given.
+
+    Returns:
+        True or False.
+    """
+    if is_array_like(y_a[0]):
+        # binary matrix multi-label table, test that class existance is the same.
+        y_a, y_b = y_a.sum(axis=0), y_b.sum(axis=0)
+        classes_a, classes_b = y_a > 0, y_b > 0
+        return np.all(classes_a == classes_b)
+
+    # test: classes contained in both array is consistent.
+    if delimiter is not None:
+        y_a = flatten_list([y.split(delimiter) for y in y_a])
+        y_b = flatten_list([y.split(delimiter) for y in y_b])
+    classes_a, classes_b = list(set(y_a)), list(set(y_b))
+    return len(classes_a) == len(classes_b)
+
+
+def train_test_sure_split(X, y, n_attempt=100, return_last=False, debug=False, **kwargs):
+    """Variant of train_test_split that makes validation for sure.
+    Returned y_test should contain all class samples at least one.
+    Simply try train_test_split repeatedly until the result satisfies this condition.
+
+    Args:
+        n_attempt: Number of attempts to satisfy class coverage.
+        return_last: Return last attempt results if all attempts didn't satisfy.
+
+    Returns:
+        X_train, X_test, y_train, y_test if satisfied;
+        or None, None, None, None.
+    """
+
+    for i in range(n_attempt):
+        X_trn, X_val, y_trn, y_val = train_test_split(X, y, **kwargs)
+        if all_same_classes(y, y_val):
+            return X_trn, X_val, y_trn, y_val
+        if debug:
+            print('.', end='')
+    if return_last:
+        return X_trn, X_val, y_trn, y_val
+    return None, None, None, None
 
 
 ## Visualization utilities
@@ -863,12 +935,12 @@ from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_sc
 def calculate_clf_metrics(y_true, y_pred, average='weighted'):
     """Calculate metrics: f1/recall/precision/accuracy.
 
-    # Arguments
+    Args:
         y_true: GT, an index of label or one-hot encoding format.
         y_pred: Prediction output, index or one-hot.
         average: `average` parameter passed to sklearn.metrics functions.
 
-    # Returns
+    Returns:
         Four metrics: f1, recall, precision, accuracy.
     """
     y_true = flatten_y_if_onehot(y_true)
@@ -919,8 +991,7 @@ def plt_japanese_font_ready():
     """Set font family with Japanese fonts.
     
     # How to install fonts:
-        wget https://ipafont.ipa.go.jp/old/ipafont/IPAfont00303.php
-        mv IPAfont00303.php IPAfont00303.zip
+        wget https://ipafont.ipa.go.jp/IPAfont/IPAfont00303.zip
         unzip -q IPAfont00303.zip
         sudo cp IPAfont00303/*.ttf /usr/share/fonts/truetype/
     """

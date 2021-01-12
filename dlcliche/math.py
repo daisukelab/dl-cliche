@@ -120,10 +120,10 @@ class OnlineStats:
     Thanks to https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
     """
 
-    def __init__(self, length):
-        self.K = np.zeros((length))
-        self.Ex = np.zeros((length))
-        self.Ex2 = np.zeros((length))
+    def __init__(self, shape):
+        self.K = np.zeros(shape)
+        self.Ex = np.zeros(shape)
+        self.Ex2 = np.zeros(shape)
         self.n = 0
 
     def put(self, x):
@@ -164,3 +164,70 @@ class OnlineStats:
         self.Ex = mean_values
         self.Ex2 = 0.0
         self.n = 1
+
+
+class RunningMean:
+    """Running mean calculator for (freq_bin, frame, ch) format."""
+
+    def __init__(self, axis):
+        self.n = 0
+        self.axis = axis
+
+    def put(self, x):
+        # https://math.stackexchange.com/questions/106700/incremental-averageing
+        if self.n == 0:
+            self.mu = x.mean(self.axis, keepdims=True)
+        else:
+            self.mu += (x.mean(self.axis, keepdims=True) - self.mu) / self.n
+        self.n += 1
+
+    def __call__(self):
+        return self.mu
+
+    def __len__(self):
+        return self.n
+
+
+class RunningVariance:
+    """Calculate mean/variance of a vector online
+    Thanks to https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+    """
+
+    def __init__(self, axis, mean):
+        self.update_mean(mean)
+        self.s2 = RunningMean(axis)
+
+    def update_mean(self, mean):
+        self.mean = mean
+
+    def put(self, x):
+        self.s2.put((x - self.mean) **2)
+
+    def __call__(self):
+        return self.s2()
+
+    def std(self):
+        return np.sqrt(self())
+
+
+class OnlineStats2:
+    """Calculate mean/variance of a vector online
+    Thanks to https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+    """
+
+    def __init__(self, shape):
+        self.mu = RunningMean()
+        self.m2 = RunningMean()
+
+    def put(self, x):
+        self.mu.put(x)
+        self.m2.put(x * x)
+
+    def mean(self):
+        return self.mu.mean
+
+    def var(self):
+        return self.m2.mean - (self.mu.mean * self.mu.mean)
+
+    def std(self):
+        return np.sqrt(self.var())

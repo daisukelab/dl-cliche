@@ -37,7 +37,7 @@ class LossFlooding(nn.Module):
 
 class IntraBatchMixup():
     """Mixup class that transform input and target, and runs loss calculation.
-    Works with every single batch, requires small changes with training process.
+    Works with normal single batch, but also requires small changes with your training flow.
 
     Example:
         >>> # replace loss function instantiation like this.
@@ -115,6 +115,53 @@ class _IntraBatchMixupLoss():
         if self.reduction == 'mean':    return d.mean()
         elif self.reduction == 'sum':   return d.sum()
         return d
+
+
+class IntraBatchMixupBCE():
+    """Mixup class that transform input and target for BCE, i.e. multi-label use case.
+    BCE version takes one-hot target.
+
+    Example:
+        >>> # replace loss function instantiation like this.
+        >>> batch_mixer = IntraBatchMixupBCE(alpha=your_alpha)
+        >>> # training example.
+        >>> for inputs, labels in train_loader:
+        >>>     mixed_inputs, mixed_labels = batch_mixer.transform(inputs, labels, train=True)
+        >>>     outputs = model(mixed_inputs)
+        >>>     loss = criterion(outputs, mixed_labels)
+        >>> # validation example.
+        >>> for inputs, labels in val_loader:
+        >>>     inputs, labels = batch_mixer.transform(inputs, labels, train=False)
+
+    Inspired by fast.ai: https://github.com/fastai/fastai/blob/master/fastai/callbacks/mixup.py
+        "Implements [mixup](https://arxiv.org/abs/1710.09412) training method"
+
+    Notes:
+        - Batch size have to be more than 2, the larger the better w.r.t. mix diversity.
+        - In validation phase (train=False), this does nothing.
+    """
+
+    def __init__(self, alpha:float=0.4):
+        self.alpha = alpha
+
+    def get_lambda(self, alpha, size, attr_ref_var):
+        lambd = np.random.beta(alpha, alpha, size)
+        lambd = np.concatenate([lambd[:,None], 1-lambd[:,None]], 1).max(1)
+        return attr_ref_var.new_tensor(lambd)
+
+    def transform(self, inputs, targets, train:bool=True):
+        if not train or self.alpha == 0.0: return inputs, targets
+
+        lambd = self.get_lambda(self.alpha, targets.size(0), inputs)
+        shuffle = torch.randperm(targets.size(0)).to(inputs.device)
+
+        counterpart_inputs, counterpart_targets = inputs[shuffle], targets[shuffle]
+        out_shape = [lambd.size(0)] + [1 for _ in range(len(inputs.shape) - 1)]
+        mixed_inputs = (inputs * lambd.view(out_shape) + counterpart_inputs * (1-lambd).view(out_shape))
+        out_shape = [lambd.size(0), 1]
+        mixed_targets = (targets * lambd.view(out_shape) + counterpart_targets * (1-lambd).view(out_shape))
+        self.last_lambd, self.last_shuffle = lambd, shuffle
+        return mixed_inputs, mixed_targets
 
 
 def torch_show_model(model, only_trainable=False):

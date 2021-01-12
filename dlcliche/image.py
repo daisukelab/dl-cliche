@@ -260,7 +260,7 @@ def show_np_image(img, figsize=None, ax=None, axis_off=False):
     """Show numpy object image with figsize on axes of subplot.
     Using this with subplot_matrix() will make it easy to plot matrix of images.
 
-    # Returns
+    Returns:
         Axes of subplot created, or given."""
     img = fix_image_ch(img)
     if not ax: fig,ax = plt.subplots(figsize=figsize)
@@ -296,7 +296,7 @@ def show_np_od_data(image, bboxes, labels, class_names=None, figsize=None):
 def union_of_bboxes(height, width, bboxes, erosion_rate=0.0, to_int=False):
     """Calculate union bounding box of boxes.
 
-    # Arguments
+    Args:
         height (float): Height of image or space.
         width (float): Width of image or space.
         bboxes (list): List like bounding boxes. Format is `[x_min, y_min, x_max, y_max]`.
