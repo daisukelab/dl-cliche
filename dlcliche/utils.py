@@ -81,7 +81,7 @@ def symlink_file(fromfile, tofile):
 
 def make_copy_to(dest_folder, files, n_sample=None, operation=copy_file):
     """Do file copy like operation from files to dest_folder.
-    
+
     If n_sample is set, it creates symlinks up to number of n_sample files.
     If n_sample is greater than len(files), symlinks are repeated twice or more until it reaches to n_sample.
     If n_sample is less than len(files), n_sample symlinks are created for the top n_sample samples in files."""
@@ -383,7 +383,7 @@ def str_to_date(text):
 def get_week_start_end_dates(week_no:int, year=None) -> [datetime.datetime, datetime.datetime]:
     """Get start and end date of an ISO calendar week.
     ISO week starts on Monday, and ends on Sunday.
-    
+
     Arguments:
         week_no: ISO calendar week number
         year: Year to calculate, None will set this year
@@ -537,7 +537,7 @@ def df_to_csv_excel_friendly(df, filename, **args):
 
 def df_merge_update(df_list):
     """Merge data frames while update duplicated index with followed row.
-    
+
     Usages:
         - df_merge_update([df1, df2, ...]) merges dataframes on the list.
     """
@@ -566,7 +566,7 @@ def df_merge_simply(dataframes):
 def df_select_by_keyword(source_df, keyword, search_columns=None, as_mask=False):
     """Select data frame rows by a search keyword.
     Any row will be selected if any of its search columns contain the keyword.
-    
+
     Returns:
         New data frame where rows have the keyword,
         or mask if as_mask is True.
@@ -759,7 +759,7 @@ def _balance_class(X, y, min_or_max, sampler_class, random_state):
           else np.min(counts)
     flat_ratio = {cls:nsamples for cls in classes}
     Xidx = [[xidx] for xidx in range(len(X))]
-    sampler_instance = sampler_class(ratio=flat_ratio, random_state=random_state)
+    sampler_instance = sampler_class(sampling_strategy=flat_ratio, random_state=random_state)
     Xidx_resampled, y_cls_resampled = sampler_instance.fit_sample(Xidx, y_cls)
     sampled_index = [idx[0] for idx in Xidx_resampled]
     return np.array([X[idx] for idx in sampled_index]), np.array([y[idx] for idx in sampled_index])
@@ -989,7 +989,7 @@ def print_clf_metrics(y_true, y_pred, average='weighted', binary_bias=None, titl
 # Thanks to https://qiita.com/knknkn1162/items/be87cba14e38e2c0f656
 def plt_japanese_font_ready():
     """Set font family with Japanese fonts.
-    
+
     # How to install fonts:
         wget https://ipafont.ipa.go.jp/IPAfont/IPAfont00303.zip
         unzip -q IPAfont00303.zip
